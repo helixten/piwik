@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable\Filter;
 
@@ -19,6 +21,8 @@ use Piwik\Metrics;
  * 
  * It is possible to specify a natural sorting (see [php.net/natsort](http://php.net/natsort) for details).
  *
+ * @package Piwik
+ * @subpackage DataTable
  * @api
  */
 class Sort extends BaseFilter

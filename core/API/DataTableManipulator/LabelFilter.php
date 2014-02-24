@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\API\DataTableManipulator;
 
@@ -20,6 +22,9 @@ use Piwik\DataTable\Row;
  *
  * The labels passed to this class should be urlencoded.
  * Some reports use recursive labels (e.g. action reports). Use > to join them.
+ *
+ * @package Piwik
+ * @subpackage Piwik_API
  */
 class LabelFilter extends DataTableManipulator
 {

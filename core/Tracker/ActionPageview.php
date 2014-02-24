@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik\Tracker;
@@ -16,6 +18,7 @@ use Piwik\Tracker;
 /**
  * This class represents a page view, tracking URL, page title and generation time.
  *
+ * @package Piwik\Tracker
  */
 class ActionPageview extends Action
 {

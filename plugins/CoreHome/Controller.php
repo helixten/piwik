@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package CoreHome
  */
 namespace Piwik\Plugins\CoreHome;
 
@@ -19,7 +21,6 @@ use Piwik\Piwik;
 use Piwik\Plugins\CoreHome\DataTableRowAction\MultiRowEvolution;
 use Piwik\Plugins\CoreHome\DataTableRowAction\RowEvolution;
 use Piwik\Plugins\CorePluginsAdmin\MarketplaceApiClient;
-use Piwik\Plugins\Dashboard\DashboardManagerControl;
 use Piwik\Plugins\UsersManager\API;
 use Piwik\Site;
 use Piwik\UpdateCheck;
@@ -28,6 +29,7 @@ use Piwik\View;
 
 /**
  *
+ * @package CoreHome
  */
 class Controller extends \Piwik\Plugin\Controller
 {
@@ -78,7 +80,6 @@ class Controller extends \Piwik\Plugin\Controller
         $view = new View('@CoreHome/getDefaultIndexView');
         $this->setGeneralVariablesView($view);
         $view->menu = MenuMain::getInstance()->getMenu();
-        $view->dashboardSettingsControl = new DashboardManagerControl();
         $view->content = '';
         return $view;
     }
@@ -188,9 +189,9 @@ class Controller extends \Piwik\Plugin\Controller
     {
         $view = new View('@CoreHome/getDonateForm');
         if (Common::getRequestVar('widget', false)
-            && Piwik::hasUserSuperUserAccess()
+            && Piwik::isUserIsSuperUser()
         ) {
-            $view->footerMessage = Piwik::translate('CoreHome_OnlyForSuperUserAccess');
+            $view->footerMessage = Piwik::translate('CoreHome_OnlyForAdmin');
         }
         return $view->render();
     }

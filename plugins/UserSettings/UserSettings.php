@@ -5,9 +5,12 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package UserSettings
  */
 namespace Piwik\Plugins\UserSettings;
 
+use Piwik\ArchiveProcessor;
 use Piwik\Menu\MenuMain;
 use Piwik\Piwik;
 use Piwik\Plugin\ViewDataTable;
@@ -18,6 +21,7 @@ use Piwik\WidgetsList;
 
 /**
  *
+ * @package UserSettings
  */
 class UserSettings extends \Piwik\Plugin
 {
@@ -160,7 +164,7 @@ class UserSettings extends \Piwik\Plugin
     );
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik;
 
@@ -21,6 +23,7 @@ use Piwik\Session\SessionNamespace;
  *
  * Learn more about nonces [here](http://en.wikipedia.org/wiki/Cryptographic_nonce).
  * 
+ * @package Piwik
  * @api
  */
 class Nonce

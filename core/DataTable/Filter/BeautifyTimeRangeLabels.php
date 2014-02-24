@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable\Filter;
 
@@ -22,6 +24,8 @@ use Piwik\DataTable;
  * 
  *     $dataTable->filter('BeautifyTimeRangeLabels', array("%1$s-%2$s min", "1 min", "%s min"));
  * 
+ * @package Piwik
+ * @subpackage DataTable
  * @api
  */
 class BeautifyTimeRangeLabels extends BeautifyRangeLabels

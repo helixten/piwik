@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik\ViewDataTable;
@@ -76,6 +78,8 @@ use Piwik\Common;
  *         }
  *     }
  * 
+ * @package Piwik
+ * @subpackage Piwik_Visualization
  * @api
  */
 class RequestConfig
@@ -183,7 +187,7 @@ class RequestConfig
     /**
      * Whether to run generic filters on the DataTable before rendering or not.
      *
-     * @see Piwik\API\DataTableGenericFilter
+     * @see Piwik_API_DataTableGenericFilter
      *
      * Default value: false
      */

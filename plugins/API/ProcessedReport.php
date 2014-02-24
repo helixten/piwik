@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Piwik_API
  */
 namespace Piwik\Plugins\API;
 
@@ -66,13 +68,14 @@ class ProcessedReport
      * Verfies whether the given report exists for the given site.
      *
      * @param int $idSite
-     * @param string $apiMethodUniqueId  For example 'MultiSites_getAll'
+     * @param string $apiModule  For example 'MultiSites'
+     * @param string $apiAction  For example 'getAll'
      *
      * @return bool
      */
-    public function isValidReportForSite($idSite, $apiMethodUniqueId)
+    public function isValidReportForSite($idSite, $apiModule, $apiAction)
     {
-        $report = $this->getReportMetadataByUniqueId($idSite, $apiMethodUniqueId);
+        $report = $this->getSingleReportMetadata($idSite, $apiModule, $apiAction);
 
         return !empty($report);
     }
@@ -82,26 +85,27 @@ class ProcessedReport
      *
      * @param int $idSite
      * @param string $metric     For example 'nb_visits'
-     * @param string $apiMethodUniqueId  For example 'MultiSites_getAll'
+     * @param string $apiModule  For example 'MultiSites'
+     * @param string $apiAction  For example 'getAll'
      *
      * @return bool
      */
-    public function isValidMetricForReport($metric, $idSite, $apiMethodUniqueId)
+    public function isValidMetricForReport($metric, $idSite, $apiModule, $apiAction)
     {
-        $translation = $this->translateMetric($metric, $idSite, $apiMethodUniqueId);
+        $translation = $this->translateMetric($metric, $idSite, $apiModule, $apiAction);
 
         return !empty($translation);
     }
 
-    public function getReportMetadataByUniqueId($idSite, $apiMethodUniqueId)
+    private function getSingleReportMetadata($idSite, $apiModule, $apiAction)
     {
-        $metadata = $this->getReportMetadata(array($idSite));
+        $metadata = $this->getMetadata($idSite, $apiModule, $apiAction);
 
-        foreach ($metadata as $report) {
-            if ($report['uniqueId'] == $apiMethodUniqueId) {
-                return $report;
-            }
+        if (empty($metadata)) {
+            return false;
         }
+
+        return array_shift($metadata);
     }
 
     /**
@@ -109,13 +113,14 @@ class ProcessedReport
      *
      * @param string $metric     For example 'nb_visits'
      * @param int    $idSite
-     * @param string $apiMethodUniqueId  For example 'MultiSites_getAll'
+     * @param string $apiModule  For example 'MultiSites'
+     * @param string $apiAction  For example 'getAll'
      *
      * @return null|string
      */
-    public function translateMetric($metric, $idSite, $apiMethodUniqueId)
+    public function translateMetric($metric, $idSite, $apiModule, $apiAction)
     {
-        $report = $this->getReportMetadataByUniqueId($idSite, $apiMethodUniqueId);
+        $report = $this->getSingleReportMetadata($idSite, $apiModule, $apiAction);
 
         if (empty($report)) {
             return;

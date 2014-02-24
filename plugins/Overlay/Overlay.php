@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Overlay
  */
 
 namespace Piwik\Plugins\Overlay;
@@ -21,7 +23,7 @@ class Overlay extends \Piwik\Plugin
     }
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     function getListHooksRegistered()
     {

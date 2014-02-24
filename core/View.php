@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik;
 
@@ -100,6 +102,7 @@ if (!defined('PIWIK_USER_PATH')) {
  *         return $view->render();
  *     }
  * 
+ * @package Piwik
  *
  * @api
  */
@@ -112,7 +115,7 @@ class View implements ViewInterface
      * @var Twig_Environment
      */
     private $twig;
-    protected $templateVars = array();
+    private $templateVars = array();
     private $contentType = 'text/html; charset=utf-8';
     private $xFrameOptions = null;
 
@@ -135,8 +138,6 @@ class View implements ViewInterface
 
         $this->piwik_version = Version::VERSION;
         $this->piwikUrl = Common::sanitizeInputValue(Url::getCurrentUrlWithoutFileName());
-        $this->userLogin = Piwik::getCurrentUserLogin();
-        $this->isSuperUser = Access::getInstance()->hasSuperUserAccess(); // TODO: redundancy w/ userIsSuperUser
     }
 
     /**
@@ -152,13 +153,11 @@ class View implements ViewInterface
     /**
      * Returns the variables to bind to the template when rendering.
      *
-     * @param array $override Template variable override values. Mainly useful
-     *                        when including View templates in other templates.
      * @return array
      */
-    public function getTemplateVars($override = array())
+    public function getTemplateVars()
     {
-        return $override + $this->templateVars;
+        return $this->templateVars;
     }
 
     /**
@@ -180,7 +179,7 @@ class View implements ViewInterface
      * @param string $key The variable name.
      * @return mixed The variable value.
      */
-    public function &__get($key)
+    public function __get($key)
     {
         return $this->templateVars[$key];
     }
@@ -202,6 +201,8 @@ class View implements ViewInterface
         try {
             $this->currentModule = Piwik::getModule();
             $this->currentAction = Piwik::getAction();
+            $userLogin = Piwik::getCurrentUserLogin();
+            $this->userLogin = $userLogin;
 
             $count = SettingsPiwik::getWebsitesCountToDisplay();
 
@@ -213,7 +214,7 @@ class View implements ViewInterface
             $this->url = Common::sanitizeInputValue(Url::getCurrentUrl());
             $this->token_auth = Piwik::getCurrentUserTokenAuth();
             $this->userHasSomeAdminAccess = Piwik::isUserHasSomeAdminAccess();
-            $this->userIsSuperUser = Piwik::hasUserSuperUserAccess();
+            $this->userIsSuperUser = Piwik::isUserIsSuperUser();
             $this->latest_version_available = UpdateCheck::isNewestVersionAvailable();
             $this->disableLink = Common::getRequestVar('disableLink', 0, 'int');
             $this->isWidget = Common::getRequestVar('widget', 0, 'int');
@@ -225,7 +226,7 @@ class View implements ViewInterface
 
             $this->loginModule = Piwik::getLoginPluginName();
 
-            $user = APIUsersManager::getInstance()->getUser($this->userLogin);
+            $user = APIUsersManager::getInstance()->getUser($userLogin);
             $this->userAlias = $user['alias'];
         } catch (Exception $e) {
             // can fail, for example at installation (no plugin loaded yet)

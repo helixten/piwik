@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik\Tracker;
@@ -19,6 +21,7 @@ use Piwik\UrlHelper;
  * - by default the URL is not recorded (since it's not used)
  * - tracks site search result count and site search category as custom variables
  *
+ * @package Piwik\Tracker
  */
 class ActionSiteSearch extends Action
 {

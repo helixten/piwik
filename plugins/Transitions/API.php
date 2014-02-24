@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Transitions
  */
 
 namespace Piwik\Plugins\Transitions;
@@ -31,6 +33,7 @@ use Piwik\Tracker\PageUrl;
 use Piwik\Tracker\TableLogAction;
 
 /**
+ * @package Transitions
  * @method static \Piwik\Plugins\Transitions\API getInstance()
  */
 class API extends \Piwik\Plugin\API

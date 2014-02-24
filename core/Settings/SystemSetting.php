@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik\Settings;
@@ -12,11 +14,13 @@ namespace Piwik\Settings;
 use Piwik\Piwik;
 
 /**
- * Describes a system wide setting. Only the Super User can change this type of setting and
+ * Describes a system wide setting. Only the super user can change this type of setting and
  * the value of this setting will affect all users.
  * 
  * See {@link \Piwik\Plugin\Settings}.
  *
+ * @package Piwik
+ * @subpackage Settings
  *
  * @api
  */
@@ -32,7 +36,7 @@ class SystemSetting extends Setting
     {
         parent::__construct($name, $title);
 
-        $this->displayedForCurrentUser = Piwik::hasUserSuperUserAccess();
+        $this->displayedForCurrentUser = Piwik::isUserIsSuperUser();
     }
 
     /**

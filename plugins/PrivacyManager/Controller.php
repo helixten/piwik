@@ -5,11 +5,13 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package PrivacyManager
  */
 namespace Piwik\Plugins\PrivacyManager;
 
 use Piwik\Common;
-use Piwik\Config as PiwikConfig;
+use Piwik\Config;
 use Piwik\Date;
 use Piwik\Db;
 use Piwik\MetricsFormatter;
@@ -24,6 +26,7 @@ use Piwik\View;
 
 /**
  *
+ * @package PrivacyManager
  */
 class Controller extends \Piwik\Plugin\ControllerAdmin
 {
@@ -33,23 +36,17 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
     public function saveSettings()
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $this->checkTokenInUrl();
             switch (Common::getRequestVar('form')) {
                 case("formMaskLength"):
-                    $enable = Common::getRequestVar("anonymizeIPEnable", 0);
-                    if ($enable == 1) {
-                        IPAnonymizer::activate();
-                    } else if ($enable == 0) {
-                        IPAnonymizer::deactivate();
-                    } else {
-                        // pass
-                    }
-
-                    $privacyConfig = new Config();
-                    $privacyConfig->ipAddressMaskLength = Common::getRequestVar("maskLength", 1);
-                    $privacyConfig->useAnonymizedIpForVisitEnrichment = Common::getRequestVar("useAnonymizedIpForVisitEnrichment", 1);
+                    $this->handlePluginState(Common::getRequestVar("anonymizeIPEnable", 0));
+                    $trackerConfig = Config::getInstance()->Tracker;
+                    $trackerConfig['ip_address_mask_length'] = Common::getRequestVar("maskLength", 1);
+                    $trackerConfig['use_anonymized_ip_for_visit_enrichment'] = Common::getRequestVar("useAnonymizedIpForVisitEnrichment", 1);
+                    Config::getInstance()->Tracker = $trackerConfig;
+                    Config::getInstance()->forceSave();
                     break;
 
                 case("formDeleteSettings"):
@@ -97,14 +94,15 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $settings['delete_reports_enable'] = Common::getRequestVar("deleteReportsEnable", 0);
         $deleteReportsOlderThan = Common::getRequestVar("deleteReportsOlderThan", 3);
         $settings['delete_reports_older_than'] = $deleteReportsOlderThan < 3 ? 3 : $deleteReportsOlderThan;
-        $settings['delete_reports_keep_basic_metrics']   = Common::getRequestVar("deleteReportsKeepBasic", 0);
-        $settings['delete_reports_keep_day_reports']     = Common::getRequestVar("deleteReportsKeepDay", 0);
-        $settings['delete_reports_keep_week_reports']    = Common::getRequestVar("deleteReportsKeepWeek", 0);
-        $settings['delete_reports_keep_month_reports']   = Common::getRequestVar("deleteReportsKeepMonth", 0);
-        $settings['delete_reports_keep_year_reports']    = Common::getRequestVar("deleteReportsKeepYear", 0);
-        $settings['delete_reports_keep_range_reports']   = Common::getRequestVar("deleteReportsKeepRange", 0);
+        $settings['delete_reports_keep_basic_metrics'] = Common::getRequestVar("deleteReportsKeepBasic", 0);
+        $settings['delete_reports_keep_day_reports'] = Common::getRequestVar("deleteReportsKeepDay", 0);
+        $settings['delete_reports_keep_week_reports'] = Common::getRequestVar("deleteReportsKeepWeek", 0);
+        $settings['delete_reports_keep_month_reports'] = Common::getRequestVar("deleteReportsKeepMonth", 0);
+        $settings['delete_reports_keep_year_reports'] = Common::getRequestVar("deleteReportsKeepYear", 0);
+        $settings['delete_reports_keep_range_reports'] = Common::getRequestVar("deleteReportsKeepRange", 0);
         $settings['delete_reports_keep_segment_reports'] = Common::getRequestVar("deleteReportsKeepSegments", 0);
-        $settings['delete_logs_max_rows_per_query']      = PiwikConfig::getInstance()->Deletelogs['delete_logs_max_rows_per_query'];
+
+        $settings['delete_logs_max_rows_per_query'] = PrivacyManager::DEFAULT_MAX_ROWS_PER_QUERY;
 
         return $settings;
     }
@@ -115,7 +113,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
      */
     public function getDatabaseSize()
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         $view = new View('@PrivacyManager/getDatabaseSize');
 
         $forceEstimate = Common::getRequestVar('forceEstimate', 0);
@@ -130,16 +128,17 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         Piwik::checkUserHasSomeAdminAccess();
         $view = new View('@PrivacyManager/privacySettings');
 
-        if (Piwik::hasUserSuperUserAccess()) {
+        if (Piwik::isUserIsSuperUser()) {
             $view->deleteData = $this->getDeleteDataInfo();
             $view->anonymizeIP = $this->getAnonymizeIPInfo();
             $view->dntSupport = DoNotTrackHeaderChecker::isActive();
             $view->canDeleteLogActions = Db::isLockPrivilegeGranted();
-            $view->dbUser = PiwikConfig::getInstance()->database['username'];
+            $view->dbUser = Config::getInstance()->database['username'];
             $view->deactivateNonce = Nonce::getNonce(self::DEACTIVATE_DNT_NONCE);
             $view->activateNonce   = Nonce::getNonce(self::ACTIVATE_DNT_NONCE);
         }
         $view->language = LanguagesManager::getLanguageCodeForCurrentUser();
+        $this->displayWarningIfConfigFileNotWritable();
         $this->setBasicVariablesView($view);
         return $view->render();
     }
@@ -150,7 +149,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
      */
     public function executeDataPurge()
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         $this->checkTokenInUrl();
 
         // if the request isn't a POST, redirect to index
@@ -183,7 +182,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
             $settings = PrivacyManager::getPurgeDataSettings();
         }
 
-        $doDatabaseSizeEstimate = PiwikConfig::getInstance()->Deletelogs['enable_auto_database_size_estimate'];
+        $doDatabaseSizeEstimate = Config::getInstance()->Deletelogs['enable_auto_database_size_estimate'];
 
         // determine the DB size & purged DB size
         $metadataProvider = new MySQLMetadataProvider();
@@ -231,20 +230,20 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
     protected function getAnonymizeIPInfo()
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         $anonymizeIP = array();
 
-        $privacyConfig = new Config();
+        $trackerConfig = Config::getInstance()->Tracker;
         $anonymizeIP["enabled"] = IpAnonymizer::isActive();
-        $anonymizeIP["maskLength"] = $privacyConfig->ipAddressMaskLength;
-        $anonymizeIP["useAnonymizedIpForVisitEnrichment"] = $privacyConfig->useAnonymizedIpForVisitEnrichment;
+        $anonymizeIP["maskLength"] = $trackerConfig['ip_address_mask_length'];
+        $anonymizeIP["useAnonymizedIpForVisitEnrichment"] = $trackerConfig['use_anonymized_ip_for_visit_enrichment'];
 
         return $anonymizeIP;
     }
 
     protected function getDeleteDataInfo()
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         $deleteDataInfos = array();
         $taskScheduler = new TaskScheduler();
         $deleteDataInfos["config"] = PrivacyManager::getPurgeDataSettings();
@@ -290,9 +289,20 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         return $deleteDataInfos;
     }
 
+    protected function handlePluginState($state = 0)
+    {
+        if ($state == 1) {
+            IPAnonymizer::activate();
+        } else if ($state == 0) {
+            IPAnonymizer::deactivate();
+        } else {
+            // pass
+        }
+    }
+
     public function deactivateDoNotTrack()
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         Nonce::checkNonce(self::DEACTIVATE_DNT_NONCE);
 
         DoNotTrackHeaderChecker::deactivate();
@@ -302,7 +312,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
     public function activateDoNotTrack()
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         Nonce::checkNonce(self::ACTIVATE_DNT_NONCE);
 
         DoNotTrackHeaderChecker::activate();

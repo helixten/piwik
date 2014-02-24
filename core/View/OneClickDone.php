@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik\View;
@@ -19,6 +21,7 @@ namespace Piwik\View;
  *
  * This class needs to be self-contained, with no external dependencies.
  *
+ * @package Piwik
  */
 class OneClickDone
 {

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Referrers
  */
 namespace Piwik\Plugins\Referrers;
 
@@ -25,11 +27,12 @@ use Piwik\WidgetsList;
 require_once PIWIK_INCLUDE_PATH . '/plugins/Referrers/functions.php';
 
 /**
+ * @package Referrers
  */
 class Referrers extends \Piwik\Plugin
 {
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {

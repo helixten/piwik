@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable\Filter;
 
@@ -22,6 +24,8 @@ use Piwik\DataTable\BaseFilter;
  *     
  *     $dataTable->filter('ColumnCallbackAddColumn', array(array('nb_visits', 'sum_time_spent'), 'avg_time_on_site', $callback));
  *
+ * @package Piwik
+ * @subpackage DataTable
  * @api
  */
 class ColumnCallbackAddColumn extends BaseFilter

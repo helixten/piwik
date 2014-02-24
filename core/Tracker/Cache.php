@@ -5,14 +5,14 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\Tracker;
 
 use Piwik\ArchiveProcessor\Rules;
 use Piwik\CacheFile;
-use Piwik\Common;
 use Piwik\Config;
-use Piwik\Log;
 use Piwik\Option;
 use Piwik\Piwik;
 use Piwik\Tracker;
@@ -20,6 +20,8 @@ use Piwik\Tracker;
 /**
  * Simple cache mechanism used in Tracker to avoid requesting settings from mysql on every request
  *
+ * @package Piwik
+ * @subpackage Tracker
  */
 class Cache
 {
@@ -61,9 +63,9 @@ class Cache
 
         Tracker::initCorePiwikInTrackerMode();
 
-        // save current user privilege and temporarily assume Super User privilege
-        $isSuperUser = Piwik::hasUserSuperUserAccess();
-        Piwik::setUserHasSuperUserAccess();
+        // save current user privilege and temporarily assume super user privilege
+        $isSuperUser = Piwik::isUserIsSuperUser();
+        Piwik::setUserIsSuperUser();
 
         $content = array();
         
@@ -86,10 +88,9 @@ class Cache
          * @param int $idSite The site ID to get attributes for.
          */
         Piwik::postEvent('Tracker.Cache.getSiteAttributes', array(&$content, $idSite));
-        Common::printDebug("Website $idSite tracker cache was re-created.");
 
         // restore original user privilege
-        Piwik::setUserHasSuperUserAccess($isSuperUser);
+        Piwik::setUserIsSuperUser($isSuperUser);
 
         // if nothing is returned from the plugins, we don't save the content
         // this is not expected: all websites are expected to have at least one URL
@@ -117,8 +118,10 @@ class Cache
     {
         $cache = self::getInstance();
         $cacheId = 'general';
-
-        if (($cacheContent = $cache->get($cacheId)) !== false) {
+        $expectedRows = 3;
+        if (($cacheContent = $cache->get($cacheId)) !== false
+            && count($cacheContent) == $expectedRows
+        ) {
             return $cacheContent;
         }
 
@@ -150,7 +153,6 @@ class Cache
          */
         Piwik::postEvent('Tracker.setTrackerCacheGeneral', array(&$cacheContent));
         self::setCacheGeneral($cacheContent);
-        Common::printDebug("General tracker cache was re-created.");
         return $cacheContent;
     }
 

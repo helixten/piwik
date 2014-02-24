@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package PluginsFunctions
  */
 namespace Piwik;
 
@@ -14,6 +16,7 @@ namespace Piwik;
  * Reports are added as dashboard widgets through the {@hook WidgetsList.addWidgets}
  * event. Observers for this event should call the {@link add()} method to add reports.
  * 
+ * @package PluginsFunctions
  * @api
  */
 class WidgetsList

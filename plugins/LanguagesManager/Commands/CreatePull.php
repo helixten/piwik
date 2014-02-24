@@ -5,6 +5,8 @@
  * @link     http://piwik.org
  * @license  http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package  CoreConsole
  */
 
 namespace Piwik\Plugins\LanguagesManager\Commands;
@@ -18,6 +20,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
+ * @package CoreConsole
  */
 class CreatePull extends ConsoleCommand
 {
@@ -111,6 +114,7 @@ class CreatePull extends ConsoleCommand
             return;
         }
 
+        $fileCount = 0;
         API::unsetInstance(); // reset languagemanager api (to force refresh of data)
 
         $stats = shell_exec('git diff --numstat HEAD');
@@ -132,32 +136,32 @@ class CreatePull extends ConsoleCommand
 
         $messages = array();
 
-        $languageCodesTouched = array();
+        $lnaguageCodesTouched = array();
         if (!empty($addedFiles[1])) {
             foreach ($addedFiles[1] AS $addedFile) {
+                $fileCount++;
                 $languageInfo = $this->getLanguageInfoByIsoCode($addedFile);
                 $messages[$addedFile] = sprintf('- Added %s (%s changes / %s translated)\n', $languageInfo['english_name'], $linesSumByLang[$addedFile], $languageInfo['percentage_complete']);
             }
-            $languageCodesTouched = array_merge($languageCodesTouched, $addedFiles[1]);
+            $lnaguageCodesTouched = array_merge($lnaguageCodesTouched, $addedFiles[1]);
         }
 
         if (!empty($modifiedFiles[1])) {
             foreach ($modifiedFiles[1] AS $modifiedFile) {
+                $fileCount++;
                 $languageInfo = $this->getLanguageInfoByIsoCode($modifiedFile);
                 $messages[$modifiedFile] = sprintf('- Updated %s (%s changes / %s translated)\n', $languageInfo['english_name'], $linesSumByLang[$modifiedFile], $languageInfo['percentage_complete']);
             }
-            $languageCodesTouched = $modifiedFiles[1];
+            $lnaguageCodesTouched = $modifiedFiles[1];
         }
 
         $message = implode('', $messages);
 
-        $languageCodesTouched = array_unique($languageCodesTouched, SORT_REGULAR);
-
         $title = sprintf(
             'Updated %s strings in %u languages (%s)',
             $addedLinesSum,
-            count($languageCodesTouched),
-            implode(', ', $languageCodesTouched)
+            $fileCount,
+            implode(', ', $lnaguageCodesTouched)
         );
 
         shell_exec('git commit -m "language update ${pluginName} refs #3430"');

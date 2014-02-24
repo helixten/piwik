@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable\Renderer;
 
@@ -23,6 +25,8 @@ use Piwik\Piwik;
  *
  * Works with recursive DataTable (when a row can be associated with a subDataTable).
  *
+ * @package Piwik
+ * @subpackage DataTable
  */
 class Php extends Renderer
 {

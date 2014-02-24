@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable\Renderer;
 
@@ -21,6 +23,8 @@ use Piwik\Url;
  * The RSS renderer can be used only on Set that are arrays of DataTable.
  * A RSS feed contains one dataTable per element in the Set.
  *
+ * @package Piwik
+ * @subpackage DataTable
  */
 class Rss extends Renderer
 {

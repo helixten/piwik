@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik;
 
@@ -12,6 +14,7 @@ namespace Piwik;
  * Contains helper methods that can be used to get information regarding the
  * server, its settings and currently used PHP settings.
  *
+ * @package Piwik
  */
 class SettingsServer
 {
@@ -121,7 +124,7 @@ class SettingsServer
         $minimumMemoryLimit = Config::getInstance()->General['minimum_memory_limit'];
 
         if (self::isArchivePhpTriggered()
-            && Piwik::hasUserSuperUserAccess()
+            && Piwik::isUserIsSuperUser()
         ) {
             // archive.php: no time limit, high memory limit
             self::setMaxExecutionTime(0);

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Installation
  */
 namespace Piwik\Plugins\Installation;
 
@@ -12,7 +14,6 @@ use Exception;
 use HTML_QuickForm2_DataSource_Array;
 use HTML_QuickForm2_Factory;
 use HTML_QuickForm2_Rule;
-use Piwik\Config;
 use Piwik\Db\Adapter;
 use Piwik\Db;
 use Piwik\DbHelper;
@@ -23,6 +24,7 @@ use Zend_Db_Adapter_Exception;
 
 /**
  *
+ * @package Installation
  */
 class FormDatabaseSetup extends QuickForm2
 {
@@ -107,8 +109,6 @@ class FormDatabaseSetup extends QuickForm2
             'tables_prefix' => $this->getSubmitValue('tables_prefix'),
             'adapter'       => $adapter,
             'port'          => $port,
-            'schema'        => Config::getInstance()->database['schema'],
-            'type'          => Config::getInstance()->database['type']
         );
 
         if (($portIndex = strpos($dbInfos['host'], '/')) !== false) {
@@ -157,6 +157,7 @@ class FormDatabaseSetup extends QuickForm2
  * - DROP
  * - CREATE TEMPORARY TABLES
  *
+ * @package Installation
  */
 class Rule_checkUserPrivileges extends HTML_QuickForm2_Rule
 {
@@ -302,6 +303,7 @@ class Rule_checkUserPrivileges extends HTML_QuickForm2_Rule
 /**
  * Filename check for prefix/DB name
  *
+ * @package Installation
  */
 class FormDatabaseSetup_Rule_checkValidFilename extends HTML_QuickForm2_Rule
 {

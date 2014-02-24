@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\Db;
 
@@ -13,6 +15,8 @@ use Piwik\Loader;
 use Zend_Db_Table;
 
 /**
+ * @package Piwik
+ * @subpackage Piwik_Db
  */
 class Adapter
 {
@@ -42,7 +46,15 @@ class Adapter
         $className = self::getAdapterClassName($adapterName);
         Loader::loadClass($className);
 
-        $adapter = new $className($dbInfos);
+        /*
+         * 5.2.1 fixes various bugs with references that caused PDO_MYSQL getConnection()
+         * to clobber $dbInfos. (#33282, #35106, #39944)
+         */
+        if (version_compare(PHP_VERSION, '5.2.1') < 0) {
+            $adapter = new $className(array_map('trim', $dbInfos));
+        } else {
+            $adapter = new $className($dbInfos);
+        }
 
         if ($connect) {
             $adapter->getConnection();

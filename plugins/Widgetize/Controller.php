@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Widgetize
  */
 namespace Piwik\Plugins\Widgetize;
 
@@ -16,6 +18,7 @@ use Piwik\WidgetsList;
 
 /**
  *
+ * @package Widgetize
  */
 class Controller extends \Piwik\Plugin\Controller
 {
@@ -50,7 +53,8 @@ class Controller extends \Piwik\Plugin\Controller
         $this->init();
         $controllerName = Common::getRequestVar('moduleToWidgetize');
         $actionName = Common::getRequestVar('actionToWidgetize');
-        $outputDataTable = FrontController::getInstance()->fetchDispatch($controllerName, $actionName);
+        $parameters = array($fetch = true);
+        $outputDataTable = FrontController::getInstance()->fetchDispatch($controllerName, $actionName, $parameters);
         if ($controllerName == 'Dashboard' && $actionName == 'index') {
             $view = new View('@Widgetize/iframe_empty');
         } else {

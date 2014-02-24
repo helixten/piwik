@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Annotations
  */
 namespace Piwik\Plugins\Annotations;
 
@@ -16,6 +18,7 @@ use Piwik\View;
 /**
  * Controller for the Annotations plugin.
  *
+ * @package Annotations
  */
 class Controller extends \Piwik\Plugin\Controller
 {

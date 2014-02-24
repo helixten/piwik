@@ -160,8 +160,8 @@
     }
 }
 
-.available_segments a.dropdown  {
-    color: @brand-black !important;
+#available_segments a.dropdown  {
+    color: @brand-black;
     text-transform: uppercase;
     .font-default(10px, 12px);
 }
@@ -351,7 +351,7 @@ table.dataTable tr td .dataTableRowActions {
   }
 }
 
-table.dataTable tr td.labeleven .dataTableRowActions {
+table.dataTable tr:nth-child(2n) td .dataTableRowActions {
   a.rightmost, a {
     background-color: #fff !important;
   }

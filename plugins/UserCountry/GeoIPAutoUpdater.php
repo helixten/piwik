@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package UserCountry
  */
 namespace Piwik\Plugins\UserCountry;
 
@@ -670,13 +672,15 @@ class GeoIPAutoUpdater extends ScheduledTask
 
     private function getPreviousScheduledTime($rescheduledTime)
     {
-        $updaterPeriod = self::getSchedulePeriod();
+        $updaterPeriod = Option::get(self::SCHEDULE_PERIOD_OPTION_NAME);
 
-        if ($updaterPeriod == self::SCHEDULE_PERIOD_WEEKLY) {
+        if ($updaterPeriod == 'week') {
             return Date::factory($rescheduledTime)->subWeek(1);
-        } else if ($updaterPeriod == self::SCHEDULE_PERIOD_MONTHLY) {
+        } else if ($updaterPeriod == 'month') {
             return Date::factory($rescheduledTime)->subMonth(1);
+        } else {
+            Log::warning("Unknown GeoIP updater period found in database: %s", $updaterPeriod);
+            return Date::factory(0);
         }
-        throw new Exception("Unknown GeoIP updater period found in database: %s", $updaterPeriod);
     }
 }

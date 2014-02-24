@@ -5,11 +5,12 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package UsersManager
  */
 namespace Piwik\Plugins\UsersManager;
 
 use Exception;
-use Piwik\Db;
 use Piwik\Menu\MenuAdmin;
 use Piwik\Option;
 use Piwik\Piwik;
@@ -18,6 +19,7 @@ use Piwik\SettingsPiwik;
 /**
  * Manage Piwik users
  *
+ * @package UsersManager
  */
 class UsersManager extends \Piwik\Plugin
 {
@@ -25,7 +27,7 @@ class UsersManager extends \Piwik\Plugin
     const PASSWORD_MAX_LENGTH = 26;
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {
@@ -35,7 +37,7 @@ class UsersManager extends \Piwik\Plugin
             'AssetManager.getStylesheetFiles'        => 'getStylesheetFiles',
             'SitesManager.deleteSite.end'            => 'deleteSite',
             'Tracker.Cache.getSiteAttributes'        => 'recordAdminUsersInCache',
-            'Translate.getClientSideTranslationKeys' => 'getClientSideTranslationKeys'
+            'Translate.getClientSideTranslationKeys' => 'getClientSideTranslationKeys',
         );
     }
 
@@ -71,7 +73,7 @@ class UsersManager extends \Piwik\Plugin
     /**
      * Return list of plug-in specific JavaScript files to be imported by the asset manager
      *
-     * @see Piwik\AssetManager
+     * @see Piwik_AssetManager
      */
     public function getJsFiles(&$jsFiles)
     {
@@ -140,8 +142,5 @@ class UsersManager extends \Piwik\Plugin
         $translationKeys[] = "General_Save";
         $translationKeys[] = "General_Done";
         $translationKeys[] = "UsersManager_DeleteConfirm";
-        $translationKeys[] = "UsersManager_ConfirmGrantSuperUserAccess";
-        $translationKeys[] = "UsersManager_ConfirmProhibitOtherUsersSuperUserAccess";
-        $translationKeys[] = "UsersManager_ConfirmProhibitMySuperUserAccess";
     }
 }

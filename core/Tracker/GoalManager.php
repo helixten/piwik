@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\Tracker;
 
@@ -16,6 +18,8 @@ use Piwik\Piwik;
 use Piwik\Tracker;
 
 /**
+ * @package Piwik
+ * @subpackage Tracker
  */
 class GoalManager
 {
@@ -314,8 +318,6 @@ class GoalManager
                 $time = $referrerTimestamp;
             }
         }
-        $this->setCampaignValuesToLowercase($type, $name, $keyword);
-
         $goal += array(
             'referer_type'              => $type,
             'referer_name'              => $name,
@@ -869,22 +871,5 @@ class GoalManager
             return false;
         }
         return true;
-    }
-
-    /**
-     * @param $type
-     * @param $name
-     * @param $keyword
-     */
-    protected function setCampaignValuesToLowercase($type, &$name, &$keyword)
-    {
-        if ($type === Common::REFERRER_TYPE_CAMPAIGN) {
-            if (!empty($name)) {
-                $name = Common::mb_strtolower($name);
-            }
-            if (!empty($keyword)) {
-                $keyword = Common::mb_strtolower($keyword);
-            }
-        }
     }
 }

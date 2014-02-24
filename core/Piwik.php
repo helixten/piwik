@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik;
 
@@ -15,7 +17,7 @@ use Piwik\Db\Schema;
 use Piwik\Db;
 use Piwik\Plugin;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
-use Piwik\Plugins\UsersManager\API as APIUsersManager;
+use Piwik\Plugins\UsersManager\API;
 use Piwik\Session;
 use Piwik\Tracker;
 use Piwik\View;
@@ -30,6 +32,8 @@ require_once PIWIK_INCLUDE_PATH . '/core/Translate.php';
  * 
  * Contains helper methods for a variety of common tasks. Plugin developers are
  * encouraged to reuse these methods as much as possible.
+ *
+ * @package Piwik
  */
 class Piwik
 {
@@ -211,12 +215,18 @@ class Piwik
      */
     static public function getCurrentUserEmail()
     {
-        $user = APIUsersManager::getInstance()->getUser(Piwik::getCurrentUserLogin());
-        return $user['email'];
+        if (!Piwik::isUserIsSuperUser()) {
+            $user = API::getInstance()->getUser(Piwik::getCurrentUserLogin());
+            return $user['email'];
+        }
+        return self::getSuperUserEmail();
     }
 
     /**
-     * @deprecated deprecated since version 2.0.4
+     * Returns the super user's username.
+     *
+     * @return string
+     * @api
      */
     static public function getSuperUserLogin()
     {
@@ -224,33 +234,15 @@ class Piwik
     }
 
     /**
-     * @deprecated deprecated since version 2.0.4
+     * Returns the super user's email address.
+     *
+     * @return string
+     * @api
      */
     static public function getSuperUserEmail()
     {
-        return '';
-    }
-
-    /**
-     * Get a list of all email addresses having Super User access.
-     *
-     * @return array
-     */
-    static public function getAllSuperUserAccessEmailAddresses()
-    {
-        $emails = array();
-
-        try {
-            $superUsers = APIUsersManager::getInstance()->getUsersHavingSuperUserAccess();
-        } catch (\Exception $e) {
-            return $emails;
-        }
-
-        foreach ($superUsers as $superUser) {
-            $emails[] = $superUser['email'];
-        }
-
-        return $emails;
+        $superuser = Config::getInstance()->superuser;
+        return $superuser['email'];
     }
 
     /**
@@ -276,17 +268,17 @@ class Piwik
     }
 
     /**
-     * Returns `true` if the current user is either the Super User or the user specified by
+     * Returns `true` if the current user is either the super user or the user specified by
      * `$theUser`.
      *
      * @param string $theUser A username.
      * @return bool
      * @api
      */
-    static public function hasUserSuperUserAccessOrIsTheUser($theUser)
+    static public function isUserIsSuperUserOrTheUser($theUser)
     {
         try {
-            self::checkUserHasSuperUserAccessOrIsTheUser($theUser);
+            self::checkUserIsSuperUserOrTheUser($theUser);
             return true;
         } catch (Exception $e) {
             return false;
@@ -294,93 +286,34 @@ class Piwik
     }
 
     /**
-     * @see Piwik::hasUserSuperUserAccessOrIsTheUser()
-     * @deprecated deprecated since version 2.0.4
-     */
-    static public function isUserIsSuperUserOrTheUser($theUser)
-    {
-        return self::hasUserSuperUserAccessOrIsTheUser($theUser);
-    }
-
-    /**
-     * @see Piwik::checkUserHasSuperUserAccessOrIsTheUser()
-     * @deprecated deprecated since version 2.0.4
-     */
-    static public function checkUserIsSuperUserOrTheUser($theUser)
-    {
-        self::checkUserHasSuperUserAccessOrIsTheUser($theUser);
-    }
-
-    /**
      * Check that the current user is either the specified user or the superuser.
      *
      * @param string $theUser A username.
-     * @throws NoAccessException If the user is neither the Super User nor the user `$theUser`.
+     * @throws NoAccessException If the user is neither the super user nor the user `$theUser`.
      * @api
      */
-    static public function checkUserHasSuperUserAccessOrIsTheUser($theUser)
+    static public function checkUserIsSuperUserOrTheUser($theUser)
     {
         try {
             if (Piwik::getCurrentUserLogin() !== $theUser) {
-                // or to the Super User
-                Piwik::checkUserHasSuperUserAccess();
+                // or to the super user
+                Piwik::checkUserIsSuperUser();
             }
         } catch (NoAccessException $e) {
-            throw new NoAccessException(Piwik::translate('General_ExceptionCheckUserHasSuperUserAccessOrIsTheUser', array($theUser)));
+            throw new NoAccessException(Piwik::translate('General_ExceptionCheckUserIsSuperUserOrTheUser', array($theUser)));
         }
     }
 
     /**
-     * Check whether the given user has superuser access.
+     * Returns true if the current user is the Super User.
      *
-     * @param string $theUser A username.
      * @return bool
      * @api
-     */
-    static public function hasTheUserSuperUserAccess($theUser)
-    {
-        if (empty($theUser)) {
-            return false;
-        }
-
-        if (Piwik::getCurrentUserLogin() === $theUser && Piwik::hasUserSuperUserAccess()) {
-            return true;
-        }
-
-        try {
-            $superUsers = APIUsersManager::getInstance()->getUsersHavingSuperUserAccess();
-        } catch (\Exception $e) {
-            return false;
-        }
-
-        foreach ($superUsers as $superUser) {
-            if ($theUser === $superUser['login']) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @see Piwik::hasUserSuperUserAccess()
-     * @deprecated deprecated since version 2.0.4
      */
     static public function isUserIsSuperUser()
     {
-        return self::hasUserSuperUserAccess();
-    }
-
-    /**
-     * Returns true if the current user has Super User access.
-     *
-     * @return bool
-     * @api
-     */
-    static public function hasUserSuperUserAccess()
-    {
         try {
-            self::checkUserHasSuperUserAccess();
+            self::checkUserIsSuperUser();
             return true;
         } catch (Exception $e) {
             return false;
@@ -415,40 +348,22 @@ class Piwik
      * Helper method user to set the current as superuser.
      * This should be used with great care as this gives the user all permissions.
      *
-     * @param bool $bool true to set current user as Super User
-     */
-    static public function setUserHasSuperUserAccess($bool = true)
-    {
-        Access::getInstance()->setSuperUserAccess($bool);
-    }
-
-    /**
-     * @see Piwik::setUserHasSuperUserAccess()
-     * @deprecated deprecated since version 2.0.4
+     * @param bool $bool true to set current user as super user
      */
     static public function setUserIsSuperUser($bool = true)
     {
-        self::setUserHasSuperUserAccess($bool);
+        Access::getInstance()->setSuperUser($bool);
     }
 
     /**
-     * @see Piwik::checkUserHasSuperUserAccess()
-     * @deprecated deprecated since version 2.0.4
-     */
-    static public function checkUserIsSuperUser()
-    {
-        self::checkUserHasSuperUserAccess();
-    }
-
-    /**
-     * Check that the current user has superuser access.
+     * Check that the current user is the superuser.
      *
      * @throws Exception if the current user is not the superuser.
      * @api
      */
-    static public function checkUserHasSuperUserAccess()
+    static public function checkUserIsSuperUser()
     {
-        Access::getInstance()->checkUserHasSuperUserAccess();
+        Access::getInstance()->checkUserIsSuperUser();
     }
 
     /**

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Updates
  */
 
 namespace Piwik\Updates;
@@ -14,10 +16,11 @@ use Piwik\Updater;
 use Piwik\Updates;
 
 /**
+ * @package Updates
  */
 class Updates_0_5 extends Updates
 {
-    static function getSql()
+    static function getSql($schema = 'Myisam')
     {
         return array(
             'ALTER TABLE ' . Common::prefixTable('log_action') . ' ADD COLUMN `hash` INTEGER(10) UNSIGNED NOT NULL AFTER `name`;'                        => '1060',

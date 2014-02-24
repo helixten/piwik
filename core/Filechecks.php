@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik;
 
@@ -43,9 +45,7 @@ class Filechecks
                 $directoryToCheck = PIWIK_USER_PATH . $directoryToCheck;
             }
 
-            if(strpos($directoryToCheck, '/tmp/') !== false) {
-                $directoryToCheck = SettingsPiwik::rewriteTmpPathWithHostname($directoryToCheck);
-            }
+            $directoryToCheck = SettingsPiwik::rewriteTmpPathWithHostname($directoryToCheck);
 
             Filesystem::mkdir($directoryToCheck);
 
@@ -123,7 +123,7 @@ class Filechecks
         if (!class_exists('Piwik\\Manifest')) {
             $git = SettingsPiwik::getCurrentGitBranch();
             if(empty($git)) {
-                $messages[] = Piwik::translate('General_WarningFileIntegrityNoManifest') . ' ' . Piwik::translate('General_WarningFileIntegrityNoManifestDeployingFromGit'); 
+                $messages[] = Piwik::translate('General_WarningFileIntegrityNoManifest') . " If you are deploying Piwik from Git, this message is normal.";
             }
             return $messages;
         }
@@ -135,7 +135,7 @@ class Filechecks
         foreach ($files as $path => $props) {
             $file = PIWIK_INCLUDE_PATH . '/' . $path;
 
-            if (!file_exists($file) || !is_readable($file)) {
+            if (!file_exists($file)) {
                 $messages[] = Piwik::translate('General_ExceptionMissingFile', $file);
             } else if (filesize($file) != $props[0]) {
                 if (!$hasMd5 || in_array(substr($path, -4), array('.gif', '.ico', '.jpg', '.png', '.swf'))) {

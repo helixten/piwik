@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package PluginsFunctions
  */
 namespace Piwik;
 
@@ -29,6 +31,7 @@ use Piwik\Tracker;
  * 
  *     Db::query("DELETE FROM mytable WHERE id < ?", array(23));
  * 
+ * @package PluginsFunctions
  * @api
  */
 class Db
@@ -53,22 +56,30 @@ class Db
         return self::$connection;
     }
 
-    public static function getDbConfig($dbConfig = null)
+    /**
+     * Connects to the database.
+     * 
+     * Shouldn't be called directly, use {@link get()} instead.
+     * 
+     * @param array|null $dbInfos Connection parameters in an array. Defaults to the `[database]`
+     *                            INI config section.
+     */
+    public static function createDatabaseObject($dbInfos = null)
     {
         $config = Config::getInstance();
 
-        if (is_null($dbConfig)) {
-            $dbConfig = $config->database;
+        if (is_null($dbInfos)) {
+            $dbInfos = $config->database;
         }
 
         /**
          * Triggered before a database connection is established.
-         *
+         * 
          * This event can be used to change the settings used to establish a connection.
-         *
+         * 
          * @param array *$dbInfos Reference to an array containing database connection info,
          *                        including:
-         *
+         * 
          *                        - **host**: The host name or IP address to the MySQL database.
          *                        - **username**: The username to use when connecting to the
          *                                        database.
@@ -77,28 +88,13 @@ class Db
          *                        - **dbname**: The name of the Piwik MySQL database.
          *                        - **port**: The MySQL database port to use.
          *                        - **adapter**: either `'PDO_MYSQL'` or `'MYSQLI'`
-         *                        - **type**: The MySQL engine to use, for instance 'InnoDB'
          */
-        Piwik::postEvent('Reporting.getDatabaseConfig', array(&$dbConfig));
+        Piwik::postEvent('Reporting.getDatabaseConfig', array(&$dbInfos));
 
-        $dbConfig['profiler'] = $config->Debug['enable_sql_profiler'];
+        $dbInfos['profiler'] = $config->Debug['enable_sql_profiler'];
 
-        return $dbConfig;
-    }
-
-    /**
-     * Connects to the database.
-     * 
-     * Shouldn't be called directly, use {@link get()} instead.
-     * 
-     * @param array|null $dbConfig Connection parameters in an array. Defaults to the `[database]`
-     *                             INI config section.
-     */
-    public static function createDatabaseObject($dbConfig = null)
-    {
-        $dbConfig = self::getDbConfig($dbConfig);
-
-        $db = @Adapter::factory($dbConfig['adapter'], $dbConfig);
+        $adapter = $dbInfos['adapter'];
+        $db      = @Adapter::factory($adapter, $dbInfos);
 
         self::$connection = $db;
     }
@@ -297,21 +293,21 @@ class Db
         }
 
         // filter out all InnoDB tables
-        $myisamDbTables = array();
+        $nonInnoDbTables = array();
         foreach (Db::fetchAll("SHOW TABLE STATUS") as $row) {
-            if (strtolower($row['Engine']) == 'myisam'
+            if (strtolower($row['Engine']) != 'innodb'
                 && in_array($row['Name'], $tables)
             ) {
-                $myisamDbTables[] = $row['Name'];
+                $nonInnoDbTables[] = $row['Name'];
             }
         }
 
-        if (empty($myisamDbTables)) {
+        if (empty($nonInnoDbTables)) {
             return false;
         }
 
         // optimize the tables
-        return self::query("OPTIMIZE TABLE " . implode(',', $myisamDbTables));
+        return self::query("OPTIMIZE TABLE " . implode(',', $nonInnoDbTables));
     }
 
     /**

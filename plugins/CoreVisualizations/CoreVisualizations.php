@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package CoreVisualizations
  */
 
 namespace Piwik\Plugins\CoreVisualizations;
@@ -21,7 +23,7 @@ require_once PIWIK_INCLUDE_PATH . '/plugins/CoreVisualizations/Visualizations/Jq
 class CoreVisualizations extends \Piwik\Plugin
 {
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {

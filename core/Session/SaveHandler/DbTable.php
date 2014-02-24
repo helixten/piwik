@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik\Session\SaveHandler;
@@ -15,6 +17,8 @@ use Zend_Session_SaveHandler_Interface;
 /**
  * Database-backed session save handler
  *
+ * @package Piwik
+ * @subpackage Session
  */
 class DbTable implements Zend_Session_SaveHandler_Interface
 {

@@ -85,6 +85,7 @@
          * @param {int} dashboardIdToLoad
          */
         loadDashboard: function (dashboardIdToLoad) {
+
             $(dashboardElement).empty();
             dashboardName = '';
             dashboardLayout = null;
@@ -426,51 +427,37 @@
     }
 
     /**
-     * Handle clicks for menu items for choosing between available dashboards
+     * Builds the menu for choosing between available dashboards
      */
     function buildMenu() {
+
         var success = function (dashboards) {
             var dashboardMenuList = $('#Dashboard').find('> ul');
-            var dashboardMenuListItems = dashboardMenuList.find('>li');
-
-            dashboardMenuListItems.filter(function () {
-                return $(this).attr('id').indexOf('Dashboard_embeddedIndex') === 0;
-            }).remove();
-
+            dashboardMenuList.empty();
             if (dashboards.length > 1) {
                 dashboardMenuList.show();
-                var items = [];
                 for (var i = 0; i < dashboards.length; i++) {
-                    var $link = $('<a/>').attr('data-idDashboard', dashboards[i].iddashboard).text(dashboards[i].name);
-                    var $li = $('<li/>').attr('id', 'Dashboard_embeddedIndex_' + dashboards[i].iddashboard)
-                                        .addClass('dashboardMenuItem').append($link);
-                    items.push($li);
-
+                    dashboardMenuList.append('<li id="Dashboard_embeddedIndex_' + dashboards[i].iddashboard + '" class="dashboardMenuItem"><a dashboardId="' + dashboards[i].iddashboard + '">' + piwikHelper.htmlEntities(dashboards[i].name) + '</a></li>');
                     if (dashboards[i].iddashboard == dashboardId) {
                         dashboardName = dashboards[i].name;
-                        $li.addClass('sfHover');
                     }
                 }
-                dashboardMenuList.prepend(items);
+                $('#Dashboard_embeddedIndex_' + dashboardId).addClass('sfHover');
             } else {
                 dashboardMenuList.hide();
             }
 
-            dashboardMenuList.find('a[data-idDashboard]').click(function (e) {
-                e.preventDefault();
-
-                var idDashboard = $(this).attr('data-idDashboard');
-
+            $('.dashboardMenuItem').on('click', function () {
                 if (typeof piwikMenu != 'undefined') {
                     piwikMenu.activateMenu('Dashboard', 'embeddedIndex');
                 }
-                $('#Dashboard ul li').removeClass('sfHover');
+                $('.dashboardMenuItem').removeClass('sfHover');
                 if ($(dashboardElement).length) {
-                    $(dashboardElement).dashboard('loadDashboard', idDashboard);
+                    $(dashboardElement).dashboard('loadDashboard', $('a', this).attr('dashboardId'));
                 } else {
-                    broadcast.propagateAjax('module=Dashboard&action=embeddedIndex&idDashboard=' + idDashboard);
+                    broadcast.propagateAjax('module=Dashboard&action=embeddedIndex&idDashboard=' + $('a', this).attr('dashboardId'));
                 }
-                $(this).closest('li').addClass('sfHover');
+                $(this).addClass('sfHover');
             });
         };
 

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Installation
  */
 
 namespace Piwik\Plugins\Installation;
@@ -18,6 +20,7 @@ use Piwik\QuickForm2;
 
 /**
  *
+ * @package Installation
  */
 class FormFirstWebsiteSetup extends QuickForm2
 {
@@ -71,6 +74,7 @@ class FormFirstWebsiteSetup extends QuickForm2
 /**
  * Timezone validation rule
  *
+ * @package Installation
  */
 class Rule_isValidTimezone extends HTML_QuickForm2_Rule
 {

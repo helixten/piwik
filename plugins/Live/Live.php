@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Live
  */
 namespace Piwik\Plugins\Live;
 
@@ -16,12 +18,13 @@ require_once PIWIK_INCLUDE_PATH . '/plugins/Live/VisitorLog.php';
 
 /**
  *
+ * @package Live
  */
 class Live extends \Piwik\Plugin
 {
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {

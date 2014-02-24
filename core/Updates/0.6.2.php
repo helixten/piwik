@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Updates
  */
 
 namespace Piwik\Updates;
@@ -16,6 +18,7 @@ use Piwik\Tracker\Cache;
 use Piwik\Updates;
 
 /**
+ * @package Updates
  */
 class Updates_0_6_2 extends Updates
 {
@@ -40,7 +43,7 @@ class Updates_0_6_2 extends Updates
         }
 
         // force regeneration of cache files
-        Piwik::setUserHasSuperUserAccess();
+        Piwik::setUserIsSuperUser();
         $allSiteIds = API::getInstance()->getAllSitesId();
         Cache::regenerateCacheWebsiteAttributes($allSiteIds);
     }

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik\API;
@@ -24,6 +26,8 @@ use ReflectionMethod;
  *
  * It will also log the performance of API calls (time spent, parameter values, etc.) if logger available
  *
+ * @package Piwik
+ * @subpackage Piwik_API
  * @static \Piwik\API\Proxy getInstance()
  */
 class Proxy extends Singleton
@@ -324,7 +328,7 @@ class Proxy extends Singleton
     }
 
     /**
-     * Returns the 'moduleName' part of '\\Piwik\\Plugins\\moduleName\\API'
+     * Returns the 'moduleName' part of 'Piwik_moduleName_API' classname
      *
      * @param string $className "API"
      * @return string "Referrers"
@@ -508,6 +512,8 @@ class Proxy extends Singleton
 /**
  * To differentiate between "no value" and default value of null
  *
+ * @package Piwik
+ * @subpackage Piwik_API
  */
 class NoDefaultValue
 {

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package CorePluginsAdmin
  */
 namespace Piwik\Plugins\CorePluginsAdmin;
 
@@ -16,6 +18,7 @@ use Piwik\Unzip;
 
 /**
  *
+ * @package CorePluginsAdmin
  */
 class PluginInstaller
 {
@@ -149,10 +152,7 @@ class PluginInstaller
 
     private function makeSureThereAreNoMissingRequirements($metadata)
     {
-        $requires = array();
-        if(!empty($metadata->require)) {
-            $requires = (array) $metadata->require;
-        }
+        $requires = (array) $metadata->require;
 
         $dependency = new PluginDependency();
         $missingDependencies = $dependency->getMissingDependencies($requires);

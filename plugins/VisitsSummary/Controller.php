@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package VisitsSummary
  */
 namespace Piwik\Plugins\VisitsSummary;
 
@@ -19,6 +21,7 @@ use Piwik\View;
 
 /**
  *
+ * @package VisitsSummary
  */
 class Controller extends \Piwik\Plugin\Controller
 {
@@ -26,7 +29,7 @@ class Controller extends \Piwik\Plugin\Controller
     {
         $view = new View('@VisitsSummary/index');
         $this->setPeriodVariablesView($view);
-        $view->graphEvolutionVisitsSummary = $this->getEvolutionGraph(array('nb_visits'));
+        $view->graphEvolutionVisitsSummary = $this->getEvolutionGraph(true, array('nb_visits'));
         $this->setSparklinesAndNumbers($view);
         return $view->render();
     }
@@ -39,7 +42,7 @@ class Controller extends \Piwik\Plugin\Controller
         return $view->render();
     }
 
-    public function getEvolutionGraph(array $columns = array())
+    public function getEvolutionGraph($fetch = false, array $columns = array())
     {
         if (empty($columns)) {
             $columns = Common::getRequestVar('columns');

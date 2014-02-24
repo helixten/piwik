@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package MobileMessaging
  */
 
 namespace Piwik\Plugins\MobileMessaging;
@@ -20,6 +22,7 @@ require_once PIWIK_INCLUDE_PATH . '/plugins/UserCountry/functions.php';
 
 /**
  *
+ * @package MobileMessaging
  */
 class Controller extends \Piwik\Plugin\ControllerAdmin
 {
@@ -36,7 +39,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
         $view = new View('@MobileMessaging/index');
 
-        $view->isSuperUser = Piwik::hasUserSuperUserAccess();
+        $view->isSuperUser = Piwik::isUserIsSuperUser();
 
         $mobileMessagingAPI = API::getInstance();
         $view->delegatedManagement = $mobileMessagingAPI->getDelegatedManagement();

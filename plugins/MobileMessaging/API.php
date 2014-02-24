@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package MobileMessaging
  */
 namespace Piwik\Plugins\MobileMessaging;
 
@@ -19,6 +21,7 @@ use Piwik\Plugins\MobileMessaging\SMSProvider;
  *  - activate phone numbers
  *  - check remaining credits
  *  - send SMS
+ * @package MobileMessaging
  * @method static \Piwik\Plugins\MobileMessaging\API getInstance()
  */
 class API extends \Piwik\Plugin\API
@@ -358,7 +361,7 @@ class API extends \Piwik\Plugin\API
 
     private function checkCredentialManagementRights()
     {
-        $this->getDelegatedManagement() ? Piwik::checkUserIsNotAnonymous() : Piwik::checkUserHasSuperUserAccess();
+        $this->getDelegatedManagement() ? Piwik::checkUserIsNotAnonymous() : Piwik::checkUserIsSuperUser();
     }
 
     private function setUserSettings($user, $settings)
@@ -381,7 +384,7 @@ class API extends \Piwik\Plugin\API
 
     private function getCredentialManagerLogin()
     {
-        return $this->getDelegatedManagement() ? Piwik::getCurrentUserLogin() : '';
+        return $this->getDelegatedManagement() ? Piwik::getCurrentUserLogin() : Piwik::getSuperUserLogin();
     }
 
     private function getUserSettings($user)
@@ -415,7 +418,7 @@ class API extends \Piwik\Plugin\API
      */
     public function setDelegatedManagement($delegatedManagement)
     {
-        Piwik::checkUserHasSuperUserAccess();
+        Piwik::checkUserIsSuperUser();
         Option::set(MobileMessaging::DELEGATED_MANAGEMENT_OPTION, $delegatedManagement);
     }
 

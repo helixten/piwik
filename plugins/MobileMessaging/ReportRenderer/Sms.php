@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Piwik_MobileMessaging_ReportRenderer
  */
 namespace Piwik\Plugins\MobileMessaging\ReportRenderer;
 
@@ -16,6 +18,7 @@ use Piwik\View;
 
 /**
  *
+ * @package Piwik_MobileMessaging_ReportRenderer
  */
 class Sms extends ReportRenderer
 {

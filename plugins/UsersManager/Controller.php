@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package UsersManager
  */
 namespace Piwik\Plugins\UsersManager;
 
@@ -22,6 +24,7 @@ use Piwik\View;
 
 /**
  *
+ * @package UsersManager
  */
 class Controller extends \Piwik\Plugin\ControllerAdmin
 {
@@ -75,30 +78,18 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
 
         ksort($usersAccessByWebsite);
 
-        $users             = array();
-        $superUsers        = array();
+        $users = array();
         $usersAliasByLogin = array();
-
         if (Piwik::isUserHasSomeAdminAccess()) {
             $users = APIUsersManager::getInstance()->getUsers();
             foreach ($users as $user) {
                 $usersAliasByLogin[$user['login']] = $user['alias'];
             }
-
-            if (Piwik::hasUserSuperUserAccess()) {
-                foreach ($users as $user) {
-                    if ($user['superuser_access']) {
-                        $superUsers[] = $user['login'];
-                    }
-                }
-            }
         }
-
         $view->anonymousHasViewAccess = $this->hasAnonymousUserViewAccess($usersAccessByWebsite);
         $view->idSiteSelected = $idSiteSelected;
         $view->defaultReportSiteName = $defaultReportSiteName;
         $view->users = $users;
-        $view->superUserLogins = $superUsers;
         $view->usersAliasByLogin = $usersAliasByLogin;
         $view->usersCount = count($users) - 1;
         $view->usersAccessByWebsite = $usersAccessByWebsite;
@@ -144,9 +135,15 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $view = new View('@UsersManager/userSettings');
 
         $userLogin = Piwik::getCurrentUserLogin();
-        $user = APIUsersManager::getInstance()->getUser($userLogin);
-        $view->userAlias = $user['alias'];
-        $view->userEmail = $user['email'];
+        if (Piwik::isUserIsSuperUser()) {
+            $view->userAlias = $userLogin;
+            $view->userEmail = Piwik::getSuperUserEmail();
+            $this->displayWarningIfConfigFileNotWritable();
+        } else {
+            $user = APIUsersManager::getInstance()->getUser($userLogin);
+            $view->userAlias = $user['alias'];
+            $view->userEmail = $user['email'];
+        }
 
         $defaultReport = APIUsersManager::getInstance()->getUserPreference($userLogin, APIUsersManager::PREFERENCE_DEFAULT_REPORT);
         if ($defaultReport === false) {
@@ -197,7 +194,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
      */
     protected function initViewAnonymousUserSettings($view)
     {
-        if (!Piwik::hasUserSuperUserAccess()) {
+        if (!Piwik::isUserIsSuperUser()) {
             return;
         }
         $userLogin = 'anonymous';
@@ -240,7 +237,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
     {
         $response = new ResponseBuilder(Common::getRequestVar('format'));
         try {
-            Piwik::checkUserHasSuperUserAccess();
+            Piwik::checkUserIsSuperUser();
             $this->checkTokenInUrl();
 
             $anonymousDefaultReport = Common::getRequestVar('anonymousDefaultReport');
@@ -313,9 +310,29 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
             throw new Exception("Cannot change password with untrusted hostname!");
         }
 
-        APIUsersManager::getInstance()->updateUser($userLogin, $newPassword, $email, $alias);
-        if ($newPassword !== false) {
-            $newPassword = Common::unsanitizeInputValue($newPassword);
+        if (Piwik::isUserIsSuperUser()) {
+            $superUser = Config::getInstance()->superuser;
+            $updatedSuperUser = false;
+
+            if ($newPassword !== false) {
+                $newPassword = Common::unsanitizeInputValue($newPassword);
+                $md5PasswordSuperUser = md5($newPassword);
+                $superUser['password'] = $md5PasswordSuperUser;
+                $updatedSuperUser = true;
+            }
+            if ($superUser['email'] != $email) {
+                $superUser['email'] = $email;
+                $updatedSuperUser = true;
+            }
+            if ($updatedSuperUser) {
+                Config::getInstance()->superuser = $superUser;
+                Config::getInstance()->forceSave();
+            }
+        } else {
+            APIUsersManager::getInstance()->updateUser($userLogin, $newPassword, $email, $alias);
+            if ($newPassword !== false) {
+                $newPassword = Common::unsanitizeInputValue($newPassword);
+            }
         }
 
         // logs the user in with the new password

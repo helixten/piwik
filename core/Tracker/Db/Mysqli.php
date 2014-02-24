@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\Tracker\Db;
 
@@ -14,6 +16,8 @@ use Piwik\Tracker\Db;
 /**
  * mysqli wrapper
  *
+ * @package Piwik
+ * @subpackage Tracker
  */
 class Mysqli extends Db
 {
@@ -263,7 +267,7 @@ class Mysqli extends Db
      */
     public function isErrNo($e, $errno)
     {
-        return mysqli_errno($this->connection) == $errno;
+        return mysqli_errno($this->_connection) == $errno;
     }
 
     /**

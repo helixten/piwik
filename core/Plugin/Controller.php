@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\Plugin;
 
@@ -24,7 +26,6 @@ use Piwik\Period\Month;
 use Piwik\Period;
 use Piwik\Period\Range;
 use Piwik\Piwik;
-use Piwik\Plugins\CoreAdminHome\CustomLogo;
 use Piwik\Plugins\LanguagesManager\LanguagesManager;
 use Piwik\Plugins\SitesManager\API as APISitesManager;
 use Piwik\Plugins\UsersManager\API as APIUsersManager;
@@ -64,6 +65,7 @@ use Piwik\ViewDataTable\Factory as ViewDataTableFactory;
  *
  *     <a href="?module=MyPlugin&action=index&idSite=1&period=day&date=2013-10-10">Link</a>
  * 
+ * @package Piwik
  */
 abstract class Controller
 {
@@ -526,10 +528,10 @@ abstract class Controller
      * 
      * **debugTrackVisitsInsidePiwikUI** - The value of the `[Debug] track_visits_inside_piwik_ui`
      *                                     INI config option.
-     * **isSuperUser** - True if the current user is the Super User, false if otherwise.
+     * **isSuperUser** - True if the current user is the super user, false if otherwise.
      * **hasSomeAdminAccess** - True if the current user has admin access to at least one site,
      *                          false if otherwise.
-     * **isCustomLogo** - The value of the `branding_use_custom_logo` option.
+     * **isCustomLogo** - The value of the `[branding] use_custom_logo` INI config option.
      * **logoHeader** - The header logo URL to use.
      * **logoLarge** - The large logo URL to use.
      * **logoSVG** - The SVG logo URL to use.
@@ -545,11 +547,9 @@ abstract class Controller
     protected function setBasicVariablesView($view)
     {
         $view->debugTrackVisitsInsidePiwikUI = PiwikConfig::getInstance()->Debug['track_visits_inside_piwik_ui'];
-        $view->isSuperUser = Access::getInstance()->hasSuperUserAccess();
+        $view->isSuperUser = Access::getInstance()->isSuperUser();
         $view->hasSomeAdminAccess = Piwik::isUserHasSomeAdminAccess();
-
-        $customLogo = new CustomLogo();
-        $view->isCustomLogo = $customLogo->isEnabled();
+        $view->isCustomLogo = PiwikConfig::getInstance()->branding['use_custom_logo'];
 
         $view->logoHeader = \Piwik\Plugins\API\API::getInstance()->getHeaderLogoUrl();
         $view->logoLarge = \Piwik\Plugins\API\API::getInstance()->getLogoUrl();
@@ -572,7 +572,7 @@ abstract class Controller
      * - **isValidHost** - true if host is valid, false if otherwise
      * - **invalidHostMessage** - message to display if host is invalid (only set if host is invalid)
      * - **invalidHost** - the invalid hostname (only set if host is invalid)
-     * - **mailLinkStart** - the open tag of a link to email the Super User of this problem (only set
+     * - **mailLinkStart** - the open tag of a link to email the super user of this problem (only set
      *                       if host is invalid)
      *
      * @param View $view
@@ -584,13 +584,12 @@ abstract class Controller
         $view->isValidHost = Url::isValidHost();
         if (!$view->isValidHost) {
             // invalid host, so display warning to user
-            $validHosts = Url::getTrustedHosts($filterEnrich = false);
-            $validHost = $validHosts[0];
+            $validHost = PiwikConfig::getInstance()->General['trusted_hosts'][0];
             $invalidHost = Common::sanitizeInputValue($_SERVER['HTTP_HOST']);
 
             $emailSubject = rawurlencode(Piwik::translate('CoreHome_InjectedHostEmailSubject', $invalidHost));
             $emailBody = rawurlencode(Piwik::translate('CoreHome_InjectedHostEmailBody'));
-            $superUserEmail = implode(',', Piwik::getAllSuperUserAccessEmailAddresses());
+            $superUserEmail = Piwik::getSuperUserEmail();
 
             $mailToUrl = "mailto:$superUserEmail?subject=$emailSubject&body=$emailBody";
             $mailLinkStart = "<a href=\"$mailToUrl\">";
@@ -613,7 +612,7 @@ abstract class Controller
                                                                                       '<strong>' . $validUrl . '</strong>'
                                                                                  )) . ' <br/>';
 
-            if (Piwik::hasUserSuperUserAccess()) {
+            if (Piwik::isUserIsSuperUser()) {
                 $view->invalidHostMessage = $warningStart . ' '
                     . Piwik::translate('CoreHome_InjectedHostSuperUserWarning', array(
                                                                                     "<a href=\"$changeTrustedHostsUrl\">",
@@ -623,14 +622,6 @@ abstract class Controller
                                                                                     $validHost,
                                                                                     '</a>'
                                                                                ));
-            } else if (Piwik::isUserIsAnonymous()) {
-                $view->invalidHostMessage = $warningStart . ' '
-                    . Piwik::translate('CoreHome_InjectedHostNonSuperUserWarning', array(
-                        "<br/><a href=\"$validUrl\">",
-                        '</a>',
-                        '<span style="display:none">',
-                        '</span>'
-                    ));
             } else {
                 $view->invalidHostMessage = $warningStart . ' '
                     . Piwik::translate('CoreHome_InjectedHostNonSuperUserWarning', array(
@@ -734,7 +725,7 @@ abstract class Controller
             exit;
         }
 
-        if (Piwik::hasUserSuperUserAccess()) {
+        if (Piwik::isUserIsSuperUser()) {
             Piwik_ExitWithMessage("Error: no website was found in this Piwik installation.
 			<br />Check the table '" . Common::prefixTable('site') . "' in your database, it should contain your Piwik websites.", false, true);
         }
@@ -743,8 +734,7 @@ abstract class Controller
         if (!empty($currentLogin)
             && $currentLogin != 'anonymous'
         ) {
-            $emails = implode(',', Piwik::getAllSuperUserAccessEmailAddresses());
-            $errorMessage = sprintf(Piwik::translate('CoreHome_NoPrivilegesAskPiwikAdmin'), $currentLogin, "<br/><a href='mailto:" . $emails . "?subject=Access to Piwik for user $currentLogin'>", "</a>");
+            $errorMessage = sprintf(Piwik::translate('CoreHome_NoPrivilegesAskPiwikAdmin'), $currentLogin, "<br/><a href='mailto:" . Piwik::getSuperUserEmail() . "?subject=Access to Piwik for user $currentLogin'>", "</a>");
             $errorMessage .= "<br /><br />&nbsp;&nbsp;&nbsp;<b><a href='index.php?module=" . Registry::get('auth')->getName() . "&amp;action=logout'>&rsaquo; " . Piwik::translate('General_Logout') . "</a></b><br />";
             Piwik_ExitWithMessage($errorMessage, false, true);
         }
@@ -770,6 +760,8 @@ abstract class Controller
         if (is_numeric($defaultReport)) {
             $defaultWebsiteId = $defaultReport;
         }
+
+        ;
 
         if ($defaultWebsiteId && Piwik::isUserHasViewAccess($defaultWebsiteId)) {
             return $defaultWebsiteId;

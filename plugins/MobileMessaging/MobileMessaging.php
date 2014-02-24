@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package MobileMessaging
  */
 namespace Piwik\Plugins\MobileMessaging;
 
@@ -20,6 +22,7 @@ use Piwik\View;
 
 /**
  *
+ * @package MobileMessaging
  */
 class MobileMessaging extends \Piwik\Plugin
 {
@@ -61,7 +64,7 @@ class MobileMessaging extends \Piwik\Plugin
     );
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {

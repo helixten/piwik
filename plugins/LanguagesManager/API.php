@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package LanguagesManager
  *
  */
 namespace Piwik\Plugins\LanguagesManager;
@@ -24,6 +26,7 @@ use Piwik\Piwik;
  * You can also request the default language to load for a user via "getLanguageForUser",
  * or update it via "setLanguageForUser".
  *
+ * @package LanguagesManager
  * @method static \Piwik\Plugins\LanguagesManager\API getInstance()
  */
 class API extends \Piwik\Plugin\API
@@ -224,7 +227,7 @@ class API extends \Piwik\Plugin\API
         if($login == 'anonymous') {
             return false;
         }
-        Piwik::checkUserHasSuperUserAccessOrIsTheUser($login);
+        Piwik::checkUserIsSuperUserOrTheUser($login);
         return Db::fetchOne('SELECT language FROM ' . Common::prefixTable('user_language') .
             ' WHERE login = ? ', array($login));
     }
@@ -238,7 +241,7 @@ class API extends \Piwik\Plugin\API
      */
     public function setLanguageForUser($login, $languageCode)
     {
-        Piwik::checkUserHasSuperUserAccessOrIsTheUser($login);
+        Piwik::checkUserIsSuperUserOrTheUser($login);
         Piwik::checkUserIsNotAnonymous();
         if (!$this->isLanguageAvailable($languageCode)) {
             return false;

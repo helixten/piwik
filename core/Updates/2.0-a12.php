@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\Updates;
 
@@ -14,10 +16,11 @@ use Piwik\Updater;
 use Piwik\Updates;
 
 /**
+ * @package Updates
  */
 class Updates_2_0_a12 extends Updates
 {
-    public static function getSql()
+    public static function getSql($schema = 'Myisam')
     {
         $result = array(
             'ALTER TABLE ' . Common::prefixTable('logger_message') . ' MODIFY level VARCHAR(16) NULL' => false

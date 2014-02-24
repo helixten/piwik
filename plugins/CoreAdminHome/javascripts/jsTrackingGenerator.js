@@ -270,7 +270,7 @@
 '+'<!-- End Piwik Code -->';
 
             // allow plugins to modify generated JavaScript
-            var eventData = {code: result, piwikHost: piwikHost };
+            var eventData = {code: result};
             $(TrackingCodeGeneratorSingleton).trigger('customizeJavaScript', eventData);
             result = eventData.code;
 

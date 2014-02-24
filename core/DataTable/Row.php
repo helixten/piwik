@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable;
 
@@ -18,6 +20,8 @@ use Piwik\Metrics;
  * DataTable rows contain columns, metadata and a subtable ID. Columns and metadata
  * are stored as an array of name => value mappings.
  *
+ * @package Piwik
+ * @subpackage DataTable
  *
  * @api
  */

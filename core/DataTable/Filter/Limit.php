@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable\Filter;
 
@@ -19,6 +21,8 @@ use Piwik\DataTable\BaseFilter;
  *     // delete all rows from 5 -> 15
  *     $dataTable->filter('Limit', array(5, 10));
  *
+ * @package Piwik
+ * @subpackage DataTable
  * @api
  */
 class Limit extends BaseFilter

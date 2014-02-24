@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package VisitorInterest
  */
 namespace Piwik\Plugins\VisitorInterest;
 
@@ -20,11 +22,12 @@ use Piwik\WidgetsList;
 
 /**
  *
+ * @package VisitorInterest
  */
 class VisitorInterest extends \Piwik\Plugin
 {
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {

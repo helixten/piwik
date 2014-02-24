@@ -1490,9 +1490,7 @@ if (typeof Piwik !== 'object') {
                         visitorUUID = hash(
                             (navigatorAlias.userAgent || '') +
                                 (navigatorAlias.platform || '') +
-                                JSON2.stringify(browserFeatures) +
-                                now.getTime() +
-                                Math.random()
+                                JSON2.stringify(browserFeatures) + nowTs
                         ).slice(0, 16); // 16 hexits = 64 bits
                     }
 

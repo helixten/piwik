@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik;
 
@@ -39,14 +41,14 @@ Arguments:
 	--force-timeout-for-periods=[seconds]
 			The current week/ current month/ current year will be processed at most every [seconds].
 			If not specified, defaults to ". CronArchive::SECONDS_DELAY_BETWEEN_PERIOD_ARCHIVES.".
-	--force-date-last-n=M
-			This script calls the API with period=lastN. You can force the N in lastN by specifying this value.
+    --force-date-last-n=M
+            This script calls the API with period=lastN. You can force the N in lastN by specifying this value.
 	--force-idsites=1,2,n
 			Restricts archiving to the specified website IDs, comma separated list.
 	--skip-idsites=1,2,n
 			If the specified websites IDs were to be archived, skip them instead.
 	--disable-scheduled-tasks
-			Skips executing Scheduled tasks (sending scheduled reports, db optimization, etc.).
+	        Skips executing Scheduled tasks (sending scheduled reports, db optimization, etc.).
 	--xhprof
 			Enables XHProf profiler for this archive.php run. Requires XHPRof (see tests/README.xhprof.md).
 	--accept-invalid-ssl-certificate
@@ -139,7 +141,7 @@ Notes:
         $this->initTokenAuth();
         $this->initCheckCli();
         $this->initStateFromParameters();
-        Piwik::setUserHasSuperUserAccess(true);
+        Piwik::setUserIsSuperUser(true);
 
         $this->logInitInfo();
         $this->checkPiwikUrlIsValid();
@@ -155,17 +157,6 @@ Notes:
             \Piwik\Profiler::setupProfilerXHProf($mainRun = true);
             $this->log("XHProf profiling is enabled.");
         }
-    }
-
-    public function runScheduledTasksInTrackerMode()
-    {
-        $this->initPiwikHost();
-        $this->initLog();
-        $this->initCore();
-        $this->initTokenAuth();
-        $this->logInitInfo();
-        $this->checkPiwikUrlIsValid();
-        $this->runScheduledTasks();
     }
 
     /**
@@ -433,7 +424,7 @@ Notes:
     public function runScheduledTasks()
     {
         $this->logSection("SCHEDULED TASKS");
-        if($this->getParameterFromCli('--disable-scheduled-tasks')) {
+        if($this->isParameterSet('--disable-scheduled-tasks')) {
             $this->log("Scheduled tasks are disabled with --disable-scheduled-tasks");
             return;
         }
@@ -492,7 +483,7 @@ Notes:
             $dateLast = $dateLastMax;
         }
 
-        $dateLastForced = $this->getParameterFromCli('--force-date-last-n', true);
+        $dateLastForced = $this->isParameterSet('--force-date-last-n', true);
         if(!empty($dateLastForced)){
             $dateLast = $dateLastForced;
         }
@@ -534,53 +525,86 @@ Notes:
      */
     private function archiveVisitsAndSegments($idsite, $period, $lastTimestampWebsiteProcessed, Timer $timerWebsite = null)
     {
-        $timer = new Timer();
-
-        $url  = $this->piwikUrl;
+        $timer = new Timer;
+        $aCurl = array();
+        $mh = false;
+        $url = $this->piwikUrl;
         $url .= $this->getVisitsRequestUrl($idsite, $period, $lastTimestampWebsiteProcessed);
         $url .= self::APPEND_TO_API_REQUEST;
 
-        $visitsAllDaysInPeriod = false;
-        $noSegmentUrl = '';
-        $success = true;
-
-        $urls = array();
-
         // already processed above for "day"
         if ($period != "day") {
-            $noSegmentUrl = $url;
-            $urls [] = $url;
+            $ch = $this->getNewCurlHandle($url);
+            $this->addCurlHandleToMulti($mh, $ch);
+            $aCurl[$url] = $ch;
             $this->requests++;
         }
-
+        $urlNoSegment = $url;
         foreach ($this->getSegmentsForSite($idsite) as $segment) {
-            $urls[] = $url . '&segment=' . urlencode($segment);
+            $segmentUrl = $url . '&segment=' . urlencode($segment);
+            $ch = $this->getNewCurlHandle($segmentUrl);
+            $this->addCurlHandleToMulti($mh, $ch);
+            $aCurl[$segmentUrl] = $ch;
             $this->requests++;
         }
 
-        $cliMulti = new CliMulti();
-        $cliMulti->setAcceptInvalidSSLCertificate($this->acceptInvalidSSLCertificate);
-        $response = $cliMulti->request($urls);
+        $success = true;
+        $visitsAllDaysInPeriod = false;
 
-        foreach ($urls as $index => $url) {
-            $content = array_key_exists($index, $response) ? $response[$index] : null;
-            $success = $success && $this->checkResponse($content, $url);
+        if (!empty($aCurl)) {
+            $running = null;
+            do {
+                usleep(1000);
+                curl_multi_exec($mh, $running);
+            } while ($running > 0);
 
-            if ($noSegmentUrl === $url && $success) {
-
-                $stats = @unserialize($content);
-                if (!is_array($stats)) {
-                    $this->logError("Error unserializing the following response from $url: " . $content);
+            foreach ($aCurl as $url => $ch) {
+                $content = curl_multi_getcontent($ch);
+                $successResponse = $this->checkResponse($content, $url);
+                $success = $successResponse && $success;
+                if ($url == $urlNoSegment
+                    && $successResponse
+                ) {
+                    $stats = @unserialize($content);
+                    if (!is_array($stats)) {
+                        $this->logError("Error unserializing the following response from $url: " . $content);
+                    }
+                    $visitsAllDaysInPeriod = @array_sum($stats);
                 }
-                $visitsAllDaysInPeriod = @array_sum($stats);
             }
+
+            foreach ($aCurl as $ch) {
+                curl_multi_remove_handle($mh, $ch);
+            }
+            curl_multi_close($mh);
         }
 
         $this->log("Archived website id = $idsite, period = $period, "
             . ($period != "day" ? (int)$visitsAllDaysInPeriod . " visits, " : "")
             . (!empty($timerWebsite) ? $timerWebsite->__toString() : $timer->__toString()));
-
         return $success;
+    }
+
+    private function addCurlHandleToMulti(&$mh, $ch)
+    {
+        if (!$mh) {
+            $mh = curl_multi_init();
+        }
+        curl_multi_add_handle($mh, $ch);
+    }
+
+    private function getNewCurlHandle($url)
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+        if ($this->acceptInvalidSSLCertificate) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        }
+        curl_setopt($ch, CURLOPT_USERAGENT, Http::getUserAgent());
+        Http::configCurlCertificate($ch);
+        return $ch;
     }
 
     /**
@@ -615,14 +639,9 @@ Notes:
             $url .= "&xhprof=2";
         }
 
+        //$this->log($url);
         try {
-
-            $cliMulti  = new CliMulti();
-            $cliMulti->setAcceptInvalidSSLCertificate($this->acceptInvalidSSLCertificate);
-            $responses = $cliMulti->request(array($url));
-
-            $response  = !empty($responses) ? array_shift($responses) : null;
-
+            $response = Http::sendHttpRequestBy('curl', $url, $timeout = 300, $userAgent = null, $destinationPath = null, $file = null, $followDepth = 0, $acceptLanguage = false, $acceptInvalidSSLCertificate = $this->acceptInvalidSSLCertificate);
         } catch (Exception $e) {
             return $this->logNetworkError($url, $e->getMessage());
         }
@@ -680,7 +699,7 @@ Notes:
         $config = Config::getInstance();
         $config->log['log_only_when_debug_parameter'] = 0;
         $config->log[\Piwik\Log::LOG_WRITERS_CONFIG_OPTION] = array("screen");
-        $config->log[\Piwik\Log::LOG_LEVEL_CONFIG_OPTION] = 'INFO';
+        $config->log[\Piwik\Log::LOG_LEVEL_CONFIG_OPTION] = 'VERBOSE';
 
         if (!function_exists("curl_multi_init")) {
             $this->log("ERROR: this script requires curl extension php_curl enabled in your CLI php.ini");
@@ -724,7 +743,7 @@ Notes:
 
     private function displayHelp()
     {
-        $displayHelp = $this->getParameterFromCli('help') || $this->getParameterFromCli('h');
+        $displayHelp = $this->isParameterSet('help') || $this->isParameterSet('h');
 
         if ($displayHelp) {
             $this->usage();
@@ -739,12 +758,12 @@ Notes:
     private function initStateFromParameters()
     {
         $this->todayArchiveTimeToLive = Rules::getTodayArchiveTimeToLive();
-        $this->acceptInvalidSSLCertificate = $this->getParameterFromCli("accept-invalid-ssl-certificate");
+        $this->acceptInvalidSSLCertificate = $this->isParameterSet("accept-invalid-ssl-certificate");
         $this->processPeriodsMaximumEverySeconds = $this->getDelayBetweenPeriodsArchives();
-        $this->shouldArchiveAllSites = (bool) $this->getParameterFromCli("force-all-websites");
-        $this->shouldStartProfiler = (bool) $this->getParameterFromCli("xhprof");
-        $restrictToIdSites = $this->getParameterFromCli("force-idsites", true);
-        $skipIdSites = $this->getParameterFromCli("skip-idsites", true);
+        $this->shouldArchiveAllSites = (bool) $this->isParameterSet("force-all-websites");
+        $this->shouldStartProfiler = (bool) $this->isParameterSet("xhprof");
+        $restrictToIdSites = $this->isParameterSet("force-idsites", true);
+        $skipIdSites = $this->isParameterSet("skip-idsites", true);
         $this->shouldArchiveSpecifiedSites = \Piwik\Site::getIdSitesFromIdSitesString($restrictToIdSites);
         $this->shouldSkipSpecifiedSites = \Piwik\Site::getIdSitesFromIdSitesString($skipIdSites);
         $this->lastSuccessRunTimestamp = Option::get(self::OPTION_ARCHIVING_FINISHED_TS);
@@ -813,29 +832,23 @@ Notes:
 
     private function initTokenAuth()
     {
-        $superUser = Db::get()->fetchRow("SELECT login, token_auth
-                                          FROM " . Common::prefixTable("user") . "
-                                          WHERE superuser_access = 1
-                                          ORDER BY date_registered ASC");
-        $this->login      = $superUser['login'];
-        $this->token_auth = $superUser['token_auth'];
+        $login = Config::getInstance()->superuser['login'];
+        $md5Password = Config::getInstance()->superuser['password'];
+        $this->token_auth = md5($login . $md5Password);
+        $this->login = $login;
     }
 
     private function initPiwikHost()
     {
         // If archive.php run as a web cron, we use the current hostname+path
         if (!Common::isPhpCliMode()) {
-            if (!empty(self::$url)) {
-                $piwikUrl = self::$url;
-            } else {
-                // example.org/piwik/misc/cron/
-                $piwikUrl = Common::sanitizeInputValue(Url::getCurrentUrlWithoutFileName());
-                // example.org/piwik/
-                $piwikUrl = $piwikUrl . "../../";
-            }
+            // example.org/piwik/misc/cron/
+            $piwikUrl = Common::sanitizeInputValue(Url::getCurrentUrlWithoutFileName());
+            // example.org/piwik/
+            $piwikUrl = $piwikUrl . "../../";
         } else {
             // If archive.php run as CLI/shell we require the piwik url to be set
-            $piwikUrl = $this->getParameterFromCli("url", true);
+            $piwikUrl = $this->isParameterSet("url", true);
 
             if (!$piwikUrl) {
                 $this->logFatalErrorUrlExpected();
@@ -850,7 +863,7 @@ Notes:
             }
 
             // ensure there is a trailing slash
-            if ($piwikUrl[strlen($piwikUrl) - 1] != '/' && !Common::stringEndsWith($piwikUrl, 'index.php')) {
+            if ($piwikUrl[strlen($piwikUrl) - 1] != '/') {
                 $piwikUrl .= '/';
             }
         }
@@ -860,12 +873,7 @@ Notes:
         if (Config::getInstance()->General['force_ssl'] == 1) {
             $piwikUrl = str_replace('http://', 'https://', $piwikUrl);
         }
-
-        if (!Common::stringEndsWith($piwikUrl, 'index.php')) {
-            $piwikUrl .= 'index.php';
-        }
-
-        $this->piwikUrl = $piwikUrl;
+        $this->piwikUrl = $piwikUrl . "index.php";
     }
 
     /**
@@ -877,7 +885,7 @@ Notes:
      * @param bool $valuePossible
      * @return true or the value (int,string) if set, false otherwise
      */
-    public static function getParameterFromCli($parameter, $valuePossible = false)
+    private function isParameterSet($parameter, $valuePossible = false)
     {
         if (!Common::isPhpCliMode()) {
             return false;
@@ -1040,7 +1048,7 @@ Notes:
      */
     private function getDelayBetweenPeriodsArchives()
     {
-        $forceTimeoutPeriod = $this->getParameterFromCli("force-timeout-for-periods", $valuePossible = true);
+        $forceTimeoutPeriod = $this->isParameterSet("force-timeout-for-periods", $valuePossible = true);
         if (empty($forceTimeoutPeriod) || $forceTimeoutPeriod === true) {
             return self::SECONDS_DELAY_BETWEEN_PERIOD_ARCHIVES;
         }
@@ -1058,7 +1066,7 @@ Notes:
 
     private function isShouldArchiveAllSitesWithTrafficSince()
     {
-        $shouldArchiveAllPeriodsSince = $this->getParameterFromCli("force-all-periods", $valuePossible = true);
+        $shouldArchiveAllPeriodsSince = $this->isParameterSet("force-all-periods", $valuePossible = true);
         if(empty($shouldArchiveAllPeriodsSince)) {
             return false;
         }
@@ -1091,6 +1099,5 @@ Notes:
         $this->logFatalError("archive.php expects the argument --url to be set to your Piwik URL, for example: --url=http://example.org/piwik/ "
             . "\n--help for more information", $backtrace = false);
     }
-
 }
 

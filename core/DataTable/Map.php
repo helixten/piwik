@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable;
 
@@ -20,6 +22,8 @@ use Piwik\DataTable\Renderer\Console;
  * 
  * The Map implements some {@link DataTable} such as {@link queueFilter()} and {@link getRowsCount}.
  *
+ * @package Piwik
+ * @subpackage DataTable
  *
  * @api
  */

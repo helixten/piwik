@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package SitesManager
  */
 namespace Piwik\Plugins\SitesManager;
 
@@ -23,6 +25,7 @@ use Piwik\View;
 
 /**
  *
+ * @package SitesManager
  */
 class Controller extends \Piwik\Plugin\ControllerAdmin
 {
@@ -34,7 +37,7 @@ class Controller extends \Piwik\Plugin\ControllerAdmin
         $view = new View('@SitesManager/index');
 
         Site::clearCache();
-        if (Piwik::hasUserSuperUserAccess()) {
+        if (Piwik::isUserIsSuperUser()) {
             $sitesRaw = API::getInstance()->getAllSites();
         } else {
             $sitesRaw = API::getInstance()->getSitesWithAdminAccess();

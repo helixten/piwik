@@ -5,13 +5,14 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Login
  */
 namespace Piwik\Plugins\Login;
 
 use Exception;
 use Piwik\Config;
 use Piwik\Cookie;
-use Piwik\FrontController;
 use Piwik\Option;
 use Piwik\Piwik;
 use Piwik\Plugins\UsersManager\UsersManager;
@@ -19,11 +20,12 @@ use Piwik\Session;
 
 /**
  *
+ * @package Login
  */
 class Login extends \Piwik\Plugin
 {
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {
@@ -43,11 +45,13 @@ class Login extends \Piwik\Plugin
     {
         $exceptionMessage = $exception->getMessage();
 
-        echo FrontController::getInstance()->dispatch('Login', 'login', array($exceptionMessage));
+        $controller = new Controller();
+
+        echo $controller->login($exceptionMessage, '' /* $exception->getTraceAsString() */);
     }
 
     /**
-     * Set login name and authentication token for API request.
+     * Set login name and autehntication token for authentication request.
      * Listens to API.Request.authenticate hook.
      */
     public function ApiRequestAuthenticate($tokenAuth)
@@ -56,30 +60,20 @@ class Login extends \Piwik\Plugin
         \Piwik\Registry::get('auth')->setTokenAuth($tokenAuth);
     }
 
-    static protected function isModuleIsAPI()
-    {
-        return Piwik::getModule() === 'API'
-                && (Piwik::getAction() == '' || Piwik::getAction() == 'index');
-    }
-
     /**
      * Initializes the authentication object.
      * Listens to Request.initAuthenticationObject hook.
      */
-    function initAuthenticationObject($activateCookieAuth = false)
+    function initAuthenticationObject($allowCookieAuthentication = false)
     {
         $auth = new Auth();
         \Piwik\Registry::set('auth', $auth);
 
-        $this->initAuthenticationFromCookie($auth, $activateCookieAuth);
-    }
-
-    /**
-     * @param $auth
-     */
-    public static function initAuthenticationFromCookie(\Piwik\Auth $auth, $activateCookieAuth)
-    {
-        if(self::isModuleIsAPI() && !$activateCookieAuth) {
+        $action = Piwik::getAction();
+        if (Piwik::getModule() === 'API'
+            && (empty($action) || $action == 'index')
+            && $allowCookieAuthentication !== true
+        ) {
             return;
         }
 

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 
 namespace Piwik;
@@ -18,8 +20,9 @@ use HTML_QuickForm2_Renderer;
 /**
  * Manages forms displayed in Twig
  *
- * For an example, @see Piwik\Plugins\Login\FormLogin
+ * For an example, @see Piwik_Login_FormLogin
  *
+ * @package Piwik
  * @see                 HTML_QuickForm2, libs/HTML/QuickForm2.php
  * @link http://pear.php.net/package/HTML_QuickForm2/
  */

@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik
+ * @package Piwik
  */
 namespace Piwik\DataTable\Filter;
 
@@ -14,6 +16,8 @@ use Piwik\DataTable\BaseFilter;
 /**
  * Sanitizes DataTable labels as an extra precaution. Called internally by Piwik.
  * 
+ * @package Piwik
+ * @subpackage DataTable
  */
 class SafeDecodeLabel extends BaseFilter
 {

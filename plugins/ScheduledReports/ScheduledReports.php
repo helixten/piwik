@@ -5,18 +5,19 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package ScheduledReports
  */
 namespace Piwik\Plugins\ScheduledReports;
 
 use Exception;
 use Piwik\Common;
 use Piwik\Config;
+use Piwik\Date;
 use Piwik\Db;
-use Piwik\DbHelper;
 use Piwik\Mail;
 use Piwik\Menu\MenuTop;
 use Piwik\Piwik;
-use Piwik\Plugins\CoreAdminHome\CustomLogo;
 use Piwik\Plugins\MobileMessaging\API as APIMobileMessaging;
 use Piwik\Plugins\MobileMessaging\MobileMessaging;
 use Piwik\Plugins\SegmentEditor\API as APISegmentEditor;
@@ -30,6 +31,7 @@ use Zend_Mime;
 
 /**
  *
+ * @package ScheduledReports
  */
 class ScheduledReports extends \Piwik\Plugin
 {
@@ -68,12 +70,11 @@ class ScheduledReports extends \Piwik\Plugin
 
     static private $managedReportFormats = array(
         ReportRenderer::HTML_FORMAT => 'plugins/Zeitgeist/images/html_icon.png',
-        ReportRenderer::PDF_FORMAT  => 'plugins/UserSettings/images/plugins/pdf.gif',
-        ReportRenderer::CSV_FORMAT  => 'plugins/Morpheus/images/export.png',
+        ReportRenderer::PDF_FORMAT  => 'plugins/UserSettings/images/plugins/pdf.gif'
     );
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {
@@ -274,8 +275,7 @@ class ScheduledReports extends \Piwik\Plugin
 
             $mail = new Mail();
             $mail->setSubject($subject);
-            $customLogo = new CustomLogo();
-            $fromEmailName = $customLogo->isEnabled()
+            $fromEmailName = Config::getInstance()->branding['use_custom_logo']
                 ? Piwik::translate('CoreHome_WebAnalyticsReports')
                 : Piwik::translate('ScheduledReports_PiwikReports');
             $fromEmailAddress = Config::getInstance()->General['noreply_email_address'];
@@ -302,24 +302,6 @@ class ScheduledReports extends \Piwik\Plugin
                     }
 
                     $mail->setBodyHtml($message . "<br/><br/>" . $contents);
-                    break;
-
-
-                case 'csv':
-                    $message .= "\n" . Piwik::translate('ScheduledReports_PleaseFindAttachedFile', array($periods[$report['period']], $reportTitle));
-
-                    if ($displaySegmentInfo) {
-                        $message .= " " . $segmentInfo;
-                    }
-
-                    $mail->setBodyText($message);
-                    $mail->createAttachment(
-                        $contents,
-                        'application/csv',
-                        Zend_Mime::DISPOSITION_INLINE,
-                        Zend_Mime::ENCODING_BASE64,
-                        $attachmentName . '.csv'
-                    );
                     break;
 
                 default:
@@ -366,6 +348,8 @@ class ScheduledReports extends \Piwik\Plugin
             if ($reportParameters[self::EMAIL_ME_PARAMETER] == 1) {
                 if (Piwik::getCurrentUserLogin() == $report['login']) {
                     $emails[] = Piwik::getCurrentUserEmail();
+                } elseif ($report['login'] == Piwik::getSuperUserLogin()) {
+                    $emails[] = Piwik::getSuperUserEmail();
                 } else {
                     try {
                         $user = APIUsersManager::getInstance()->getUser($report['login']);
@@ -406,7 +390,7 @@ class ScheduledReports extends \Piwik\Plugin
             $idSite = false,
             $period = false,
             $idReport = false,
-            $ifSuperUserReturnOnlySuperUserReports = false
+            $ifSuperUserReturnOnlySuperUserReports = APIMobileMessaging::getInstance()->getDelegatedManagement()
         );
 
         foreach ($reports as $report) {
@@ -476,14 +460,22 @@ class ScheduledReports extends \Piwik\Plugin
 
     public function getScheduledTasks(&$tasks)
     {
+        $arbitraryDateInUTC = Date::factory('2011-01-01');
         foreach (API::getInstance()->getReports() as $report) {
             if (!$report['deleted'] && $report['period'] != ScheduledTime::PERIOD_NEVER) {
+                $midnightInSiteTimezone =
+                    date(
+                        'H',
+                        Date::factory(
+                            $arbitraryDateInUTC,
+                            Site::getTimezoneFor($report['idsite'])
+                        )->getTimestamp()
+                    );
 
-                $timezone = Site::getTimezoneFor($report['idsite']);
+                $hourInUTC = (24 - $midnightInSiteTimezone + $report['hour']) % 24;
 
                 $schedule = ScheduledTime::getScheduledTimeForPeriod($report['period']);
-                $schedule->setHour($report['hour']);
-                $schedule->setTimezone($timezone);
+                $schedule->setHour($hourInUTC);
                 $tasks[] = new ScheduledTask (
                     API::getInstance(),
                     'sendReport',
@@ -569,23 +561,33 @@ class ScheduledReports extends \Piwik\Plugin
 
     public function install()
     {
-        $reportTable = "`idreport` INT(11) NOT NULL AUTO_INCREMENT,
-					    `idsite` INTEGER(11) NOT NULL,
-					    `login` VARCHAR(100) NOT NULL,
-					    `description` VARCHAR(255) NOT NULL,
-					    `idsegment` INT(11),
-					    `period` VARCHAR(10) NOT NULL,
-					    `hour` tinyint NOT NULL default 0,
-					    `type` VARCHAR(10) NOT NULL,
-					    `format` VARCHAR(10) NOT NULL,
-					    `reports` TEXT NOT NULL,
-					    `parameters` TEXT NULL,
-					    `ts_created` TIMESTAMP NULL,
-					    `ts_last_sent` TIMESTAMP NULL,
-					    `deleted` tinyint(4) NOT NULL default 0,
-					    PRIMARY KEY (`idreport`)";
-
-        DbHelper::createTable('report', $reportTable);
+        $queries[] = '
+                CREATE TABLE `' . Common::prefixTable('report') . '` (
+					`idreport` INT(11) NOT NULL AUTO_INCREMENT,
+					`idsite` INTEGER(11) NOT NULL,
+					`login` VARCHAR(100) NOT NULL,
+					`description` VARCHAR(255) NOT NULL,
+					`idsegment` INT(11),
+					`period` VARCHAR(10) NOT NULL,
+					`hour` tinyint NOT NULL default 0,
+					`type` VARCHAR(10) NOT NULL,
+					`format` VARCHAR(10) NOT NULL,
+					`reports` TEXT NOT NULL,
+					`parameters` TEXT NULL,
+					`ts_created` TIMESTAMP NULL,
+					`ts_last_sent` TIMESTAMP NULL,
+					`deleted` tinyint(4) NOT NULL default 0,
+					PRIMARY KEY (`idreport`)
+				) DEFAULT CHARSET=utf8';
+        try {
+            foreach ($queries as $query) {
+                Db::exec($query);
+            }
+        } catch (Exception $e) {
+            if (!Db::get()->isErrNo($e, '1050')) {
+                throw $e;
+            }
+        }
     }
 
     private static function checkAdditionalEmails($additionalEmails)

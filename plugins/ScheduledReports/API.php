@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package ScheduledReports
  */
 namespace Piwik\Plugins\ScheduledReports;
 
@@ -31,6 +33,7 @@ use Zend_Mime;
  * or manage existing reports with "updateReport" and "deleteReport".
  * See also the documentation about <a href='http://piwik.org/docs/email-reports/' target='_blank'>Scheduled Email reports</a> in Piwik.
  *
+ * @package ScheduledReports
  * @method static \Piwik\Plugins\ScheduledReports\API getInstance()
  */
 class API extends \Piwik\Plugin\API
@@ -170,7 +173,7 @@ class API extends \Piwik\Plugin\API
     {
         $APIScheduledReports = $this->getReports($idSite = false, $periodSearch = false, $idReport);
         $report = reset($APIScheduledReports);
-        Piwik::checkUserHasSuperUserAccessOrIsTheUser($report['login']);
+        Piwik::checkUserIsSuperUserOrTheUser($report['login']);
 
         Db::get()->update(Common::prefixTable('report'),
             array(
@@ -207,7 +210,7 @@ class API extends \Piwik\Plugin\API
         $bind = array();
 
         // Super user gets all reports back, other users only their own
-        if (!Piwik::hasUserSuperUserAccess()
+        if (!Piwik::isUserIsSuperUser()
             || $ifSuperUserReturnOnlySuperUserReports
         ) {
             $sqlWhere .= "AND login = ?";
@@ -350,7 +353,7 @@ class API extends \Piwik\Plugin\API
                     // is enforced in Scheduled tasks, and ensure Multisites.getAll only return the websites that this user can access
                     $userLogin = $report['login'];
                     if (!empty($userLogin)
-                        && !Piwik::hasTheUserSuperUserAccess($userLogin)
+                        && $userLogin != Piwik::getSuperUserLogin()
                     ) {
                         $_GET['_restrictSitesToLogin'] = $userLogin;
                     }

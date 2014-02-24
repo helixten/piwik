@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package CustomVariables
  */
 namespace Piwik\Plugins\CustomVariables;
 
@@ -16,6 +18,7 @@ use Piwik\Tracker;
 use Piwik\WidgetsList;
 
 /**
+ * @package CustomVariables
  */
 class CustomVariables extends \Piwik\Plugin
 {
@@ -27,7 +30,7 @@ class CustomVariables extends \Piwik\Plugin
     }
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {

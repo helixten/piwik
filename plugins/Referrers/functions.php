@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Referrers
  */
 namespace Piwik\Plugins\Referrers;
 
@@ -28,23 +30,16 @@ function getPathFromUrl($url)
 }
 
 /**
- * Returns the main url of the social network the given url matches
+ * Returns the last parts of the domain of a URL.
  *
- * @param string  $url
- *
- * @return string
+ * @param string $url e.g. http://www.facebook.com/?sdlfk=lksdfj
+ * @return string|false e.g. facebook.com
  */
-function getSocialMainUrl($url)
+function cleanSocialUrl($url)
 {
-    $social  = getSocialNetworkFromDomain($url);
-    foreach (Common::getSocialUrls() AS $domain => $name) {
-
-        if($name == $social) {
-
-            return $domain;
-        }
-    }
-    return $url;
+    $segment = '[^.:\/]+';
+    preg_match('/(?:https?:\/\/)?(?:' . $segment . '\.)?(' . $segment . '(?:\.' . $segment . ')+)/', $url, $matches);
+    return isset($matches[1]) ? $matches[1] : false;
 }
 
 /**
@@ -55,15 +50,13 @@ function getSocialMainUrl($url)
  */
 function getSocialNetworkFromDomain($url)
 {
-    foreach (Common::getSocialUrls() AS $domain => $name) {
+    $domain = cleanSocialUrl($url);
 
-        if(preg_match('/(^|[\.\/])'.$domain.'([\.\/]|$)/', $url)) {
-
-            return $name;
-        }
+    if (isset($GLOBALS['Piwik_socialUrl'][$domain])) {
+        return $GLOBALS['Piwik_socialUrl'][$domain];
+    } else {
+        return Piwik::translate('General_Unknown');
     }
-
-    return Piwik::translate('General_Unknown');
 }
 
 /**
@@ -76,38 +69,43 @@ function getSocialNetworkFromDomain($url)
  */
 function isSocialUrl($url, $socialName = false)
 {
-    foreach (Common::getSocialUrls() AS $domain => $name) {
+    $domain = cleanSocialUrl($url);
 
-        if (preg_match('/(^|[\.\/])'.$domain.'([\.\/]|$)/', $url) && ($socialName === false || $name == $socialName)) {
-
-            return true;
-        }
+    if (isset($GLOBALS['Piwik_socialUrl'][$domain])
+        && ($socialName === false
+            || $GLOBALS['Piwik_socialUrl'][$domain] == $socialName)
+    ) {
+        return true;
     }
 
     return false;
 }
 
-/**
- * Return social network logo path by URL
+/* Return social network logo path by URL
  *
- * @param string $domain
+ * @param string $url
  * @return string path
  * @see plugins/Referrers/images/socials/
  */
 function getSocialsLogoFromUrl($domain)
 {
-    $social = getSocialNetworkFromDomain($domain);
-    $socialNetworks = Common::getSocialUrls();
+    $domain = cleanSocialUrl($domain);
 
-    $filePattern = 'plugins/Referrers/images/socials/%s.png';
-
-    foreach ($socialNetworks as $domainKey => $name) {
-        if ($social == $socialNetworks[$domainKey] && file_exists(PIWIK_INCLUDE_PATH . '/' . sprintf($filePattern, $domainKey))) {
-            return sprintf($filePattern, $domainKey);
+    if (isset($GLOBALS['Piwik_socialUrl'][$domain])) {
+        // image names are by first domain in list, so make sure we use the first if $domain isn't it
+        $firstDomain = $domain;
+        foreach ($GLOBALS['Piwik_socialUrl'] as $domainKey => $name) {
+            if ($name == $GLOBALS['Piwik_socialUrl'][$domain]) {
+                $firstDomain = $domainKey;
+                break;
+            }
         }
-    }
 
-    return sprintf($filePattern, 'xx');
+        $pathWithCode = 'plugins/Referrers/images/socials/' . $firstDomain . '.png';
+        return $pathWithCode;
+    } else {
+        return 'plugins/Referrers/images/socials/xx.png';
+    }
 }
 
 /**
@@ -137,9 +135,7 @@ function getSearchEngineUrlFromName($name)
  */
 function getSearchEngineHostFromUrl($url)
 {
-    if (strpos($url, '//')) {
-        $url = substr($url, strpos($url, '//') + 2);
-    }
+    $url = substr($url, strpos($url, '//') + 2);
     if (($p = strpos($url, '/')) !== false) {
         $url = substr($url, 0, $p);
     }
@@ -204,7 +200,7 @@ function getSearchEngineUrlFromUrlAndKeyword($url, $keyword)
 /**
  * Return search engine URL for keyword and URL
  *
- * @see \Piwik\Plugins\Referrers\getSearchEngineUrlFromUrlAndKeyword
+ * @see Piwik_getSearchEngineUrlFromUrlAndKeyword(getSearchEngineUrlFromUrlAndKeyword
  *
  * @param string $keyword Keyword, e.g., web+analytics
  * @param string $url Domain name, e.g., search.piwik.org

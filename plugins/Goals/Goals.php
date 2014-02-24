@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Goals
  */
 namespace Piwik\Plugins\Goals;
 
@@ -22,6 +24,7 @@ use Piwik\WidgetsList;
 
 /**
  *
+ * @package Goals
  */
 class Goals extends \Piwik\Plugin
 {
@@ -81,7 +84,7 @@ class Goals extends \Piwik\Plugin
     }
 
     /**
-     * @see Piwik\Plugin::getListHooksRegistered
+     * @see Piwik_Plugin::getListHooksRegistered
      */
     public function getListHooksRegistered()
     {
@@ -416,14 +419,12 @@ class Goals extends \Piwik\Plugin
             array('category' => Piwik::translate('General_Visit'),
                   'name'     => Piwik::translate('Goals_VisitsUntilConv'),
                   'module'   => 'Goals',
-                  'action'   => 'getVisitsUntilConversion',
-                  'viewDataTable' => 'table',
+                  'action'   => 'getVisitsUntilConversion'
             ),
             array('category' => Piwik::translate('General_Visit'),
                   'name'     => Piwik::translate('Goals_DaysToConv'),
                   'module'   => 'Goals',
-                  'action'   => 'getDaysToConversion',
-                  'viewDataTable' => 'table',
+                  'action'   => 'getDaysToConversion'
             )
         );
         $dimensions = array_merge($dimensions, $reportWithGoalMetrics);

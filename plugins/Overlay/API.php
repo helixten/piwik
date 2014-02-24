@@ -5,6 +5,8 @@
  * @link http://piwik.org
  * @license http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  *
+ * @category Piwik_Plugins
+ * @package Overlay
  */
 namespace Piwik\Plugins\Overlay;
 
@@ -20,6 +22,7 @@ use Piwik\Tracker\PageUrl;
 
 /**
  * Class API
+ * @package Overlay
  * @method static \Piwik\Plugins\Overlay\API getInstance()
  */
 class API extends \Piwik\Plugin\API
@@ -114,15 +117,15 @@ class API extends \Piwik\Plugin\API
          * 
          *     use Piwik\Registry;
          * 
-         *     public function initAuthenticationObject($activateCookieAuth)
+         *     public function initAuthenticationObject($allowCookieAuthentication)
          *     {
-         *         Registry::set('auth', new LDAPAuth($activateCookieAuth));
+         *         Registry::set('auth', new LDAPAuth($allowCookieAuthentication));
          *     }
          * 
-         * @param bool $activateCookieAuth Whether authentication based on `$_COOKIE` values should
+         * @param bool $allowCookieAuthentication Whether authentication based on `$_COOKIE` values should
          *                                        be allowed.
          */
-        Piwik::postEvent('Request.initAuthenticationObject', array($activateCookieAuth = true));
+        Piwik::postEvent('Request.initAuthenticationObject', array($allowCookieAuthentication = true));
 
         $auth = \Piwik\Registry::get('auth');
         $success = Access::getInstance()->reloadAccess($auth);
